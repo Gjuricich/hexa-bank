@@ -57,3 +57,23 @@ CREATE TABLE clientes (
     FOREIGN KEY (localidad_id, provincia_id) REFERENCES localidades(localidad_id, provincia_id),
 	FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id)
 );
+
+CREATE TABLE tiposcuentas (
+    id_tipoCuenta INT NOT NULL AUTO_INCREMENT, 
+    tipo_cuenta VARCHAR(22) NOT NULL,
+    PRIMARY KEY (id_tipoCuenta)
+);
+
+CREATE TABLE cuentas (
+    numero_cuenta INT NOT NULL AUTO_INCREMENT, 
+    cbu VARCHAR(22) NOT NULL UNIQUE,
+    dni VARCHAR(8) NOT NULL,
+    fecha_creacion DATE NOT NULL,
+    id_tipoCuenta INT NOT NULL,
+    saldo DECIMAL(10, 2) DEFAULT 10000.00,
+    estado BOOLEAN DEFAULT TRUE,
+    PRIMARY KEY (numero_cuenta, cbu, dni),
+    FOREIGN KEY (dni) REFERENCES clientes(dni),
+    FOREIGN KEY (id_tipoCuenta) REFERENCES tiposcuentas(id_tipoCuenta),
+    CHECK (saldo >= 0)
+);
