@@ -77,3 +77,25 @@ CREATE TABLE cuentas (
     FOREIGN KEY (id_tipoCuenta) REFERENCES tiposcuentas(id_tipoCuenta),
     CHECK (saldo >= 0)
 );
+
+CREATE TABLE cuotas (
+    cuota_id INT NOT NULL AUTO_INCREMENT,
+    prestamo_id INT NOT NULL,
+    numero_cuota INT NOT NULL,
+    fecha_vencimiento DATE NOT NULL,
+    importe DECIMAL(10, 2) NOT NULL,
+    fecha_pago DATE,
+    PRIMARY KEY(cuota_id, prestamo_id),
+    FOREIGN KEY (prestamo_id) REFERENCES prestamos(prestamo_id)
+);
+
+CREATE TABLE movimientos (
+    movimiento_id INT NOT NULL AUTO_INCREMENT,
+    numero_cuenta INT NOT NULL,
+    fecha DATE NOT NULL,
+    detalle VARCHAR(255),
+    importe DECIMAL(10, 2) NOT NULL,
+    tipo_movimiento ENUM('alta de cuenta', 'alta de préstamo', 'pago de préstamo', 'transferencia') NOT NULL,
+    PRIMARY KEY(movimiento_id, numero_cuenta),
+    FOREIGN KEY (numero_cuenta) REFERENCES cuentas(numero_cuenta)
+);
