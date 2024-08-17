@@ -99,3 +99,18 @@ CREATE TABLE movimientos (
     PRIMARY KEY(movimiento_id, numero_cuenta),
     FOREIGN KEY (numero_cuenta) REFERENCES cuentas(numero_cuenta)
 );
+
+CREATE TABLE transferencias (
+    transferencia_id INT NOT NULL AUTO_INCREMENT,
+	dni VARCHAR(8) NOT NULL,
+    cbu_origen VARCHAR(22) NOT NULL,
+    cbu_destino VARCHAR(22) NOT NULL,
+    fecha DATE NOT NULL,
+    detalle VARCHAR(255),
+    importe DECIMAL(10, 2) NOT NULL,
+    movimiento_id INT NOT NULL,
+    PRIMARY KEY (transferencia_id),
+	FOREIGN KEY (dni) REFERENCES clientes(dni),
+    FOREIGN KEY (cbu_origen) REFERENCES cuentas(cbu),
+    FOREIGN KEY (movimiento_id) REFERENCES movimientos(movimiento_id)
+);
