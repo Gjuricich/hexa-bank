@@ -22,6 +22,7 @@ public class ClienteDaoImpl implements ClienteDao {
 
 	private static final String insert = "INSERT INTO clientes(dni, cuil, nombre ,apellido ,sexo ,nacionalidad ,fecha_nacimiento ,direccion ,localidad_id ,correo_electronico ,telefono ,usuario_id ,provincia_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)";	
         private static final String delete = "CALL SP_BAJA_CLIENTE(?,?);";
+        private static final String prestamosPorCliente= "SELECT COUNT(*) FROM prestamos as p INNER JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta INNER JOIN clientes cl ON c.dni = cl.dni WHERE cl.dni = ? AND p.estado_prestamo <> 'Rechazado' AND p.estado = 'Vigente'";
 
 	@Override
 	public boolean insert(Cliente cliente) {
@@ -106,6 +107,34 @@ public class ClienteDaoImpl implements ClienteDao {
             }
         }
 	    return respuesta;
+	}
+
+        public boolean prestamosPorCliente(String dni) {
+	    try {
+	        Class.forName("com.mysql.jdbc.Driver");
+	    } catch (ClassNotFoundException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+
+	    Connection conexion = Conexion.getConexion().getSQLConexion();
+	    PreparedStatement statement;
+	    boolean tienePrestamos = false;
+
+	    try {
+	        statement = conexion.prepareStatement(prestamosPorCliente);
+	        statement.setString(1, dni);
+	        ResultSet resultSet = statement.executeQuery();
+	        
+	        if (resultSet.next()) {
+	            int prestamosActivos = resultSet.getInt(1);	            
+	            tienePrestamos = prestamosActivos > 0;
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+
+	    return tienePrestamos;
 	}
 
 
