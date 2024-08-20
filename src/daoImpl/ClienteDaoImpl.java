@@ -20,6 +20,7 @@ import daoImpl.LocalidadDaoImpl;
 public class ClienteDaoImpl implements ClienteDao {
     
         private static final String update = "UPDATE clientes SET cuil = ? , nombre = ?, apellido = ?, sexo = ?, nacionalidad = ?, fecha_nacimiento = ?, direccion = ?, localidad_id = ?, provincia_id = ?, correo_electronico = ?, telefono = ? WHERE dni = ?";
+        private static final String get = "SELECT * FROM clientes WHERE dni = ?";
 	private static final String insert = "INSERT INTO clientes(dni, cuil, nombre ,apellido ,sexo ,nacionalidad ,fecha_nacimiento ,direccion ,localidad_id ,correo_electronico ,telefono ,usuario_id ,provincia_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)";	
         private static final String delete = "CALL SP_BAJA_CLIENTE(?,?);";
         private static final String prestamosPorCliente= "SELECT COUNT(*) FROM prestamos as p INNER JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta INNER JOIN clientes cl ON c.dni = cl.dni WHERE cl.dni = ? AND p.estado_prestamo <> 'Rechazado' AND p.estado = 'Vigente'";
@@ -177,6 +178,50 @@ public class ClienteDaoImpl implements ClienteDao {
 	    }
 	    return isUpdateExitoso;
 	}
+        
+        @Override
+	public Cliente get(String dni) {
+		try 
+    	{
+    		Class.forName("com.mysql.jdbc.Driver");
+    	}catch (ClassNotFoundException e){
+    		e.printStackTrace();
+    	}
+		PreparedStatement statement;
+		Connection conexion = Conexion.getConexion().getSQLConexion();
+		
+		try {
+			statement = conexion.prepareStatement(get);
+			statement.setString(1, dni);
+			ResultSet result_set = statement.executeQuery();
+			while(result_set.next()) {
+                UsuarioDaoImpl usuarioDaoImpl = new UsuarioDaoImpl();
+                LocalidadDaoImpl localidadDaoImpl = new LocalidadDaoImpl();
+				
+
+				Cliente cliente = new  Cliente(
+					dni,
+					result_set.getString("cuil"),
+					result_set.getString("nombre"), 
+					result_set.getString("apellido"), 
+					result_set.getString("sexo").charAt(0),
+					result_set.getString("nacionalidad"), 
+					result_set.getDate("fecha_nacimiento"), 
+					result_set.getString("direccion"),
+					localidadDaoImpl.get(result_set.getInt("localidad_id")), 
+					result_set.getString("correo_electronico"),
+					result_set.getString("telefono"), 
+					usuarioDaoImpl.get(result_set.getInt("usuario_id"))
+				);
+				return cliente;
+			}
+		}		
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 
 
 
