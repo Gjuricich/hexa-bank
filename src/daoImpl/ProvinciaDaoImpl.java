@@ -1,0 +1,50 @@
+package daoImpl;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import entidad.Pais;
+import entidad.Provincia;
+import dao.ProvinciaDao;
+import daoImpl.PaisDaoImpl;
+
+
+public class ProvinciaDaoImpl implements ProvinciaDao{
+
+	private static final String list = "SELECT * FROM provincias";
+
+	@Override
+	public ArrayList<Provincia> list() {
+		try 
+    	{
+    		Class.forName("com.mysql.jdbc.Driver");
+    	}catch (ClassNotFoundException e){
+    		e.printStackTrace();
+    	}
+		ArrayList<Provincia> list_provincias = new ArrayList<Provincia>();
+		try {
+			Connection conexion = Conexion.getConexion().getSQLConexion();
+			Statement statement = conexion.createStatement();
+			ResultSet result_set = statement.executeQuery(list);
+			while(result_set.next()) {
+				String nombre_provincia = result_set.getString("nombre");
+				int pais_id = result_set.getInt("pais_id");
+				int provincia_id = result_set.getInt("provincia_id");
+				PaisDaoImpl paisDaoImpl = new PaisDaoImpl();
+				Pais pais = paisDaoImpl.get(pais_id);
+				Provincia provincia = new Provincia(provincia_id,nombre_provincia,pais);
+				list_provincias.add(provincia);
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return list_provincias;
+	}
+	
+
+}
