@@ -78,6 +78,28 @@ CREATE TABLE cuentas (
     CHECK (saldo >= 0)
 );
 
+CREATE TABLE tipos_prestamo (
+    tipo_prestamo_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    importe_total DECIMAL(10, 2) NOT NULL,
+    importe_intereses DECIMAL(10, 2) NOT NULL,
+    nro_cuotas INT NOT NULL,
+    cuota_mensual DECIMAL(10, 2) NOT NULL,
+    interes_anual INT NOT NULL
+);
+
+CREATE TABLE prestamos (
+    prestamo_id INT NOT NULL AUTO_INCREMENT,
+    numero_cuenta INT NOT NULL,
+    fecha DATE NOT NULL,
+    plazo_pago int NOT NULL,
+    tipo_prestamo_id INT NOT NULL,
+    estado_prestamo ENUM('Autorizado', 'Rechazado', 'En proceso') NOT NULL default 'En proceso',
+    estado  ENUM('Vigente', 'Cancelado') NOT NULL default 'Vigente',
+    PRIMARY KEY(prestamo_id,numero_cuenta),
+    FOREIGN KEY (tipo_prestamo_id) REFERENCES tipos_prestamo(tipo_prestamo_id),
+    FOREIGN KEY (numero_cuenta) REFERENCES cuentas(numero_cuenta)
+);
+
 CREATE TABLE cuotas (
     cuota_id INT NOT NULL AUTO_INCREMENT,
     prestamo_id INT NOT NULL,
@@ -114,6 +136,243 @@ CREATE TABLE transferencias (
     FOREIGN KEY (cbu_origen) REFERENCES cuentas(cbu),
     FOREIGN KEY (movimiento_id) REFERENCES movimientos(movimiento_id)
 );
+
+DELIMITER //
+CREATE PROCEDURE SP_BAJA_CLIENTE(
+    _dni VARCHAR(8),
+    _idUsuario INT
+)
+BEGIN
+      UPDATE clientes SET estado = FALSE WHERE dni = _dni;
+      UPDATE cuentas SET estado = FALSE  WHERE dni = _dni;
+      UPDATE usuarios SET estado = FALSE WHERE usuario_id = _idUsuario;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE SP_TRANSFERENCIAS(
+    cbuOrigen VARCHAR(22),
+    cbuDestino VARCHAR(22),
+    importe DECIMAL(10,2),
+    detalle VARCHAR(255)
+)
+BEGIN
+	DECLARE fechaActual  DATE DEFAULT CURDATE();
+    DECLARE saldoOrigen DECIMAL(10,2);
+    DECLARE saldoDestino DECIMAL(10,2);
+    DECLARE cuentaDestinoExiste BOOLEAN;
+    DECLARE idMovOrigen INT;
+    DECLARE idMovDestino INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    SELECT saldo INTO saldoOrigen FROM cuentas WHERE cbu = cbuOrigen;
+    IF saldoOrigen < importe THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Saldo insuficiente en la cuenta de origen';
+    END IF;
+	SELECT saldo INTO saldoDestino FROM cuentas WHERE cbu = cbuOrigen;
+
+	INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento)
+	VALUES ((SELECT numero_cuenta FROM cuentas WHERE cbu = cbuOrigen),fechaActual,detalle,-importe,'transferencia');
+
+	SET idMovOrigen = LAST_INSERT_ID();
+
+	INSERT INTO transferencias (dni, cbu_origen, cbu_destino, fecha, detalle, importe, movimiento_id)
+	VALUES ((SELECT dni FROM cuentas WHERE cbu = cbuOrigen),cbuOrigen,cbuDestino,fechaActual, detalle, importe,idMovOrigen);
+	UPDATE cuentas SET saldo = saldo - importe WHERE cbu = cbuOrigen;
+    
+	SELECT COUNT(*) INTO cuentaDestinoExiste FROM cuentas WHERE cbu = cbuDestino;
+	IF cuentaDestinoExiste = 1 THEN
+            INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento) VALUES ((SELECT numero_cuenta FROM cuentas WHERE cbu = cbuDestino),fechaActual, detalle,importe,'transferencia');
+            INSERT INTO transferencias (dni, cbu_origen, cbu_destino, fecha, detalle, importe, movimiento_id)
+			VALUES ((SELECT dni FROM cuentas WHERE cbu = cbuOrigen),cbuOrigen,cbuDestino,fechaActual, detalle, importe,idMovOrigen);
+            UPDATE cuentas SET saldo = saldo + importe WHERE cbu = cbuDestino;
+	END IF;
+    COMMIT;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER altaCuenta AFTER INSERT ON cuentas
+FOR EACH ROW
+BEGIN
+    DECLARE detalle_movimiento VARCHAR(255);  
+    SET detalle_movimiento = CONCAT('Alta de cuenta para DNI ', NEW.dni);
+    INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento)
+    VALUES (NEW.numero_cuenta, CURDATE(), detalle_movimiento, 10000.00, 'alta de cuenta');
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE SP_AUTORIZAR_PRESTAMO(
+    IN idPrestamo INT,
+    IN cuentaDestino INT
+)
+BEGIN
+    DECLARE dni VARCHAR(10);
+    DECLARE importeTotal DECIMAL(10, 2);
+    DECLARE nroCuotas INT;
+    DECLARE cuotaMensual DECIMAL(10, 2);
+    DECLARE fechaActual DATE DEFAULT CURDATE();
+    DECLARE idMovimiento INT;
+    DECLARE i INT DEFAULT 1;
+    DECLARE fechaVencimiento DATE;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+    SELECT c.dni, tp.importe_total, tp.nro_cuotas, tp.cuota_mensual INTO dni, importeTotal, nroCuotas, cuotaMensual FROM prestamos p
+    JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta
+    JOIN tipos_prestamo tp ON p.tipo_prestamo_id = tp.tipo_prestamo_id
+    WHERE p.prestamo_id = idPrestamo;
+
+
+    UPDATE prestamos SET estado_prestamo = 'Autorizado' WHERE prestamo_id = idPrestamo;
+    UPDATE cuentas  SET saldo = saldo + importeTotal   WHERE numero_cuenta = cuentaDestino;
+
+    INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento) 
+    VALUES (cuentaDestino, fechaActual, 'Alta de un préstamo', importeTotal, 'alta de préstamo');
+
+    SET idMovimiento = LAST_INSERT_ID();
+
+    WHILE i <= nroCuotas DO
+        SET fechaVencimiento = DATE_ADD(fechaActual, INTERVAL i MONTH);
+        INSERT INTO cuotas (prestamo_id, numero_cuota, fecha_vencimiento, importe, fecha_pago)
+        VALUES (idPrestamo, i, fechaVencimiento, cuotaMensual, NULL);
+        SET i = i + 1;
+    END WHILE;
+
+    COMMIT;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE  PROCEDURE ObtenerPrestamosSinDni(
+	IN fechaInicio DATE,
+    IN fechaFin DATE,
+    IN estadoPrestamo VARCHAR(20),
+    IN importeMin DECIMAL(10, 2),
+    IN importeMax DECIMAL(10, 2)
+)
+BEGIN
+    SELECT
+        p.prestamo_id  ,
+        p.numero_cuenta  ,
+        p.fecha  ,
+        p.plazo_pago   ,
+        p.estado_prestamo ,
+        tp.importe_total,
+        tp.tipo_prestamo_id ,
+        c.dni  
+    FROM
+        prestamos p
+    JOIN
+        tipos_prestamo tp ON p.tipo_prestamo_id = tp.tipo_prestamo_id
+    JOIN
+        cuentas c ON p.numero_cuenta = c.numero_cuenta
+
+    WHERE
+        (tp.importe_total BETWEEN importeMin AND importeMax
+        or tp.importe_total BETWEEN importeMax AND importeMin)
+        AND( p.fecha BETWEEN fechaInicio AND fechaFin
+        or p.fecha BETWEEN fechaFin AND fechaInicio)
+
+        AND p.estado_prestamo = estadoPrestamo;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE ObtenerPrestamos(
+    IN dniCliente VARCHAR(8),
+    IN fechaInicio DATE,
+    IN fechaFin DATE,
+    IN estadoPrestamo VARCHAR(20),
+    IN importeMin DECIMAL(10, 2),
+    IN importeMax DECIMAL(10, 2)
+)
+BEGIN
+    SELECT
+        p.prestamo_id as prestamo_id ,
+        p.numero_cuenta as numero_cuenta,
+        p.fecha as fecha,
+        p.plazo_pago as plazo_pago,
+        p.estado_prestamo as estado_prestamo,
+        tp.tipo_prestamo_id as tipo_prestamo_id,
+        c.dni as dni
+    FROM
+        prestamos p
+    JOIN
+        tipos_prestamo tp ON p.tipo_prestamo_id = tp.tipo_prestamo_id
+    JOIN
+        cuentas c ON p.numero_cuenta = c.numero_cuenta
+    JOIN
+        clientes cl ON cl.dni = c.dni
+    WHERE
+        (tp.importe_total BETWEEN importeMin AND importeMax
+        or tp.importe_total BETWEEN importeMax AND importeMin)
+        AND( p.fecha BETWEEN fechaInicio AND fechaFin
+        or p.fecha BETWEEN fechaFin AND fechaInicio)
+        AND cl.dni LIKE CONCAT('%', dniCliente, '%')
+        AND p.estado_prestamo = estadoPrestamo;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE SP_PAGO_CUOTA(
+    IN idCuota INT,
+    IN nroCuentaDebito INT
+)
+BEGIN
+   
+    DECLARE nroCuotas INT;
+    DECLARE cuotaMensual DECIMAL(10, 2);
+    DECLARE saldoOrigen DECIMAL(10, 2);
+    DECLARE fechaActual DATE DEFAULT CURDATE();
+    DECLARE idPrestamo INT;
+    DECLARE cuotasTotal INT;
+    DECLARE cuotasPagas INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+	START TRANSACTION;
+    
+    SELECT saldo INTO saldoOrigen FROM cuentas WHERE numero_cuenta = nroCuentaDebito;
+    SELECT numero_cuota, importe, prestamo_id INTO nroCuotas, cuotaMensual, idPrestamo FROM cuotas  WHERE  cuota_id = idCuota;
+
+    IF saldoOrigen < cuotaMensual THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Saldo insuficiente en la cuenta de origen';
+    ELSE
+		UPDATE cuotas SET fecha_pago = fechaActual WHERE  cuota_id = idCuota;
+		UPDATE cuentas  SET saldo = saldo - cuotaMensual   WHERE numero_cuenta = nroCuentaDebito;
+
+		INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento) 
+		VALUES (nroCuentaDebito, fechaActual,   CONCAT('Pago de cuota: ', nroCuotas), -cuotaMensual,'pago de préstamo');
+        
+		SELECT COUNT(*) INTO cuotasPagas  FROM cuotas WHERE prestamo_id = idPrestamo AND fecha_pago IS NOT NULL;
+        SELECT plazo_pago  INTO cuotasTotal FROM prestamos  WHERE  prestamo_id = idPrestamo;
+        
+        IF cuotasPagas = cuotasTotal THEN
+          UPDATE prestamos SET estado = 'Cancelado' WHERE prestamo_id = idPrestamo;
+        END IF;
+	END IF;
+
+    COMMIT;
+END //
+DELIMITER ;
 
 
 INSERT INTO paises (nombre) VALUES 
@@ -268,3 +527,13 @@ INSERT INTO prestamos (numero_cuenta, fecha, plazo_pago, tipo_prestamo_id, estad
 (13, '2024-12-30', 36, 1, 'En proceso', 'Vigente'),
 (14, '2024-01-10', 48, 2, 'Rechazado', 'Vigente'),
 (15, '2024-02-14', 60, 3, 'En proceso', 'Vigente');
+
+
+CALL SP_AUTORIZAR_PRESTAMO(1,1);
+CALL SP_AUTORIZAR_PRESTAMO(3,3);
+CALL SP_AUTORIZAR_PRESTAMO(15,15);
+
+
+
+
+
