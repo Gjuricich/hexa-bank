@@ -18,8 +18,9 @@ import entidad.Cuenta;
 import entidad.TipoPrestamo;
 
 public class PrestamoDaoImpl implements PrestamoDao {
-    private static final String insert = "INSERT INTO prestamos(numero_cuenta, fecha, plazo_pago, tipo_prestamo_id, estado_prestamo) VALUES(?, ?, ?, ?, ?)";  
-    
+     private static final String insert = "INSERT INTO prestamos(numero_cuenta, fecha, plazo_pago, tipo_prestamo_id, estado_prestamo) VALUES(?, ?, ?, ?, ?)";  
+    private static final String list = "SELECT p.*, cli.nombre, cli.apellido FROM prestamos as p JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta JOIN clientes cli ON c.dni = cli.dni WHERE p.estado_prestamo = 'En proceso'";
+   
     @Override
     public boolean insert(Prestamo prestamo) {
         try {
@@ -53,4 +54,48 @@ public class PrestamoDaoImpl implements PrestamoDao {
         }
         return isInsertExitoso;
     }
+
+
+    @Override
+    public ArrayList<Prestamo> list() {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        ArrayList<Prestamo> list_prestamos = new ArrayList<Prestamo>();
+        Cuenta cuenta = new Cuenta();
+        try {
+            Connection conexion = Conexion.getConexion().getSQLConexion();
+            Statement statement = conexion.createStatement();
+            ResultSet result_set = statement.executeQuery(list);
+            while (result_set.next()) {
+                int prestamoId = result_set.getInt("prestamo_id");
+                cuenta.setNumeroCuenta(result_set.getInt("numero_cuenta"));
+                java.sql.Date fecha = result_set.getDate("fecha");
+                int plazoPago = result_set.getInt("plazo_pago");
+                int tipoPrestamoId = result_set.getInt("tipo_prestamo_id");
+                String estadoPrestamo = result_set.getString("estado_prestamo");
+                String nombre = result_set.getString("nombre");
+                String apellido = result_set.getString("apellido");
+                
+                Cliente cliente = new Cliente();
+                cliente.setApellido(apellido);
+                cliente.setNombre(nombre);
+
+                TipoPrestamoDaoImpl tipoPrestamoDaoImpl = new TipoPrestamoDaoImpl();
+                TipoPrestamo tipoPrestamo = tipoPrestamoDaoImpl.get(tipoPrestamoId);         
+                Prestamo prestamo = new Prestamo(prestamoId, cuenta,cliente, tipoPrestamo, fecha, estadoPrestamo,plazoPago);
+
+                list_prestamos.add(prestamo);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list_prestamos;
+    }
+    
+  
+	
 }
