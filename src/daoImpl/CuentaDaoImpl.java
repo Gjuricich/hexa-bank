@@ -24,7 +24,9 @@ public class CuentaDaoImpl implements CuentaDao {
 	private static final String insert = "INSERT INTO cuentas(id_tipoCuenta, cbu, dni, fecha_creacion) VALUES((SELECT id_tipoCuenta FROM tiposcuentas WHERE tipo_cuenta = ?), ?, ?, CURDATE())";	    
 	private static final String delete = "UPDATE cuentas SET estado = 0 where numero_cuenta = ?";
 	private static final String prestamosPorCuenta = "SELECT COUNT(*) FROM prestamos WHERE numero_cuenta = ? AND estado_prestamo <> 'Rechazado' AND estado = 'Vigente'";
+	private static final String update = "UPDATE cuentas SET id_tipoCuenta = (SELECT id_tipoCuenta FROM tiposcuentas WHERE tipo_cuenta = ?), saldo = ? WHERE numero_cuenta = ?";
 	
+		
 	@Override
 	public ArrayList<Cuenta> list() {
 	    try {
@@ -214,5 +216,38 @@ public class CuentaDaoImpl implements CuentaDao {
 	}
 
 
+	@Override
+	public boolean update(int nroCuenta, String tipoCuenta, BigDecimal saldo) {
+	    try {
+	        Class.forName("com.mysql.jdbc.Driver");
+	    } catch (ClassNotFoundException e) {
+	        e.printStackTrace();
+	    }
 
+	    PreparedStatement statement;
+	    Connection conexion = Conexion.getConexion().getSQLConexion();
+	    boolean isUpdateExitoso = false;
+
+	    try {
+	        statement = conexion.prepareStatement(update);
+	        statement.setString(1, tipoCuenta);
+	        statement.setBigDecimal(2, saldo);
+	        statement.setInt(3, nroCuenta);
+	        
+	        if (statement.executeUpdate() > 0) {
+	            conexion.commit();
+	            isUpdateExitoso = true;
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        try {
+	            conexion.rollback();
+	        } catch (SQLException e1) {
+	            e1.printStackTrace();
+	        }
+	    }
+	    return isUpdateExitoso;
+	}
+
+	
 }
