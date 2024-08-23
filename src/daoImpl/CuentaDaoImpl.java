@@ -20,10 +20,10 @@ import daoImpl.LocalidadDaoImpl;
 public class CuentaDaoImpl implements CuentaDao {
 	
 	private static final String list = "SELECT c.*, t.tipo_cuenta FROM cuentas c JOIN tiposcuentas t ON c.id_tipoCuenta = t.id_tipoCuenta WHERE c.estado = 1";	    
-	private static final String listPorDni = "SELECT c.*, t.tipo_cuenta FROM cuentas c JOIN tiposcuentas t ON c.id_tipoCuenta = t.id_tipoCuenta WHERE c.estado = 1 and c.dni = ?";	    
+	private static final String listPorDni = "SELECT c.*, t.tipo_cuenta FROM cuentas c JOIN tiposcuentas t ON c.id_tipoCuenta = t.id_tipoCuenta WHERE c.estado = 1 and c.dni = ?";	      
 	private static final String insert = "INSERT INTO cuentas(id_tipoCuenta, cbu, dni, fecha_creacion) VALUES((SELECT id_tipoCuenta FROM tiposcuentas WHERE tipo_cuenta = ?), ?, ?, CURDATE())";	    
+	private static final String delete = "UPDATE cuentas SET estado = 0 where numero_cuenta = ?";
 	
-
 	@Override
 	public ArrayList<Cuenta> list() {
 	    try {
@@ -99,7 +99,6 @@ public class CuentaDaoImpl implements CuentaDao {
 
 	}
 
-	
 	@Override
 	public boolean insert(Cuenta cuenta_a_agregar) {
 		try 
@@ -142,5 +141,43 @@ public class CuentaDaoImpl implements CuentaDao {
 	    return isInsertExitoso;
 	}
 
+	@Override
+	public String delete(int nroCuenta) {
+		 try {
+		        Class.forName("com.mysql.jdbc.Driver");
+		    } catch (ClassNotFoundException e) {
+		        e.printStackTrace();
+		    }
 
+		    PreparedStatement statement;
+		    Connection conexion = Conexion.getConexion().getSQLConexion();
+		    String respuesta=null;
+
+		    try {
+		    	if (!prestamosPorCuenta(nroCuenta)) {
+		        statement = conexion.prepareStatement(delete);
+		        statement.setInt(1, nroCuenta);
+		        
+
+	            if (statement.executeUpdate() > 0) {
+	                conexion.commit();
+	                respuesta = "La cuenta nro " + nroCuenta + " fue eliminada exitosamente";
+	            } else {
+	                respuesta = "La cuenta nro " + nroCuenta + " no se pudo eliminar";
+	            }
+	        } else {
+	            respuesta = "La cuenta tiene préstamos vigentes y no puede darse de baja.";
+	        }
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		        try {
+		            conexion.rollback();
+		        } catch (SQLException e1) {
+		            e1.printStackTrace();
+		        }
+		    }
+		    return respuesta;
+
+	}
+	
 }
