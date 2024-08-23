@@ -176,6 +176,64 @@ BEGIN
 END //
 DELIMITER ;
 
+DELIMITER //
+CREATE TRIGGER altaCuenta AFTER INSERT ON cuentas
+FOR EACH ROW
+BEGIN
+    DECLARE detalle_movimiento VARCHAR(255);  
+    SET detalle_movimiento = CONCAT('Alta de cuenta para DNI ', NEW.dni);
+    INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento)
+    VALUES (NEW.numero_cuenta, CURDATE(), detalle_movimiento, 10000.00, 'alta de cuenta');
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE SP_AUTORIZAR_PRESTAMO(
+    IN idPrestamo INT,
+    IN cuentaDestino INT
+)
+BEGIN
+    DECLARE dni VARCHAR(10);
+    DECLARE importeTotal DECIMAL(10, 2);
+    DECLARE nroCuotas INT;
+    DECLARE cuotaMensual DECIMAL(10, 2);
+    DECLARE fechaActual DATE DEFAULT CURDATE();
+    DECLARE idMovimiento INT;
+    DECLARE i INT DEFAULT 1;
+    DECLARE fechaVencimiento DATE;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+    SELECT c.dni, tp.importe_total, tp.nro_cuotas, tp.cuota_mensual INTO dni, importeTotal, nroCuotas, cuotaMensual FROM prestamos p
+    JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta
+    JOIN tipos_prestamo tp ON p.tipo_prestamo_id = tp.tipo_prestamo_id
+    WHERE p.prestamo_id = idPrestamo;
+
+
+    UPDATE prestamos SET estado_prestamo = 'Autorizado' WHERE prestamo_id = idPrestamo;
+    UPDATE cuentas  SET saldo = saldo + importeTotal   WHERE numero_cuenta = cuentaDestino;
+
+    INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento) 
+    VALUES (cuentaDestino, fechaActual, 'Alta de un préstamo', importeTotal, 'alta de préstamo');
+
+    SET idMovimiento = LAST_INSERT_ID();
+
+    WHILE i <= nroCuotas DO
+        SET fechaVencimiento = DATE_ADD(fechaActual, INTERVAL i MONTH);
+        INSERT INTO cuotas (prestamo_id, numero_cuota, fecha_vencimiento, importe, fecha_pago)
+        VALUES (idPrestamo, i, fechaVencimiento, cuotaMensual, NULL);
+        SET i = i + 1;
+    END WHILE;
+
+    COMMIT;
+END //
+DELIMITER ;
+
 
 INSERT INTO paises (nombre) VALUES 
 ('Argentina'), 
