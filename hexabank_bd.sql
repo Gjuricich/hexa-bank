@@ -78,6 +78,28 @@ CREATE TABLE cuentas (
     CHECK (saldo >= 0)
 );
 
+CREATE TABLE tipos_prestamo (
+    tipo_prestamo_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    importe_total DECIMAL(10, 2) NOT NULL,
+    importe_intereses DECIMAL(10, 2) NOT NULL,
+    nro_cuotas INT NOT NULL,
+    cuota_mensual DECIMAL(10, 2) NOT NULL,
+    interes_anual INT NOT NULL
+);
+
+CREATE TABLE prestamos (
+    prestamo_id INT NOT NULL AUTO_INCREMENT,
+    numero_cuenta INT NOT NULL,
+    fecha DATE NOT NULL,
+    plazo_pago int NOT NULL,
+    tipo_prestamo_id INT NOT NULL,
+    estado_prestamo ENUM('Autorizado', 'Rechazado', 'En proceso') NOT NULL default 'En proceso',
+    estado  ENUM('Vigente', 'Cancelado') NOT NULL default 'Vigente',
+    PRIMARY KEY(prestamo_id,numero_cuenta),
+    FOREIGN KEY (tipo_prestamo_id) REFERENCES tipos_prestamo(tipo_prestamo_id),
+    FOREIGN KEY (numero_cuenta) REFERENCES cuentas(numero_cuenta)
+);
+
 CREATE TABLE cuotas (
     cuota_id INT NOT NULL AUTO_INCREMENT,
     prestamo_id INT NOT NULL,
@@ -305,6 +327,53 @@ BEGIN
 END //
 DELIMITER ;
 
+DELIMITER //
+CREATE PROCEDURE SP_PAGO_CUOTA(
+    IN idCuota INT,
+    IN nroCuentaDebito INT
+)
+BEGIN
+   
+    DECLARE nroCuotas INT;
+    DECLARE cuotaMensual DECIMAL(10, 2);
+    DECLARE saldoOrigen DECIMAL(10, 2);
+    DECLARE fechaActual DATE DEFAULT CURDATE();
+    DECLARE idPrestamo INT;
+    DECLARE cuotasTotal INT;
+    DECLARE cuotasPagas INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+	START TRANSACTION;
+    
+    SELECT saldo INTO saldoOrigen FROM cuentas WHERE numero_cuenta = nroCuentaDebito;
+    SELECT numero_cuota, importe, prestamo_id INTO nroCuotas, cuotaMensual, idPrestamo FROM cuotas  WHERE  cuota_id = idCuota;
+
+    IF saldoOrigen < cuotaMensual THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Saldo insuficiente en la cuenta de origen';
+    ELSE
+		UPDATE cuotas SET fecha_pago = fechaActual WHERE  cuota_id = idCuota;
+		UPDATE cuentas  SET saldo = saldo - cuotaMensual   WHERE numero_cuenta = nroCuentaDebito;
+
+		INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento) 
+		VALUES (nroCuentaDebito, fechaActual,   CONCAT('Pago de cuota: ', nroCuotas), -cuotaMensual,'pago de préstamo');
+        
+		SELECT COUNT(*) INTO cuotasPagas  FROM cuotas WHERE prestamo_id = idPrestamo AND fecha_pago IS NOT NULL;
+        SELECT plazo_pago  INTO cuotasTotal FROM prestamos  WHERE  prestamo_id = idPrestamo;
+        
+        IF cuotasPagas = cuotasTotal THEN
+          UPDATE prestamos SET estado = 'Cancelado' WHERE prestamo_id = idPrestamo;
+        END IF;
+	END IF;
+
+    COMMIT;
+END //
+DELIMITER ;
+
 
 INSERT INTO paises (nombre) VALUES 
 ('Argentina'), 
@@ -458,3 +527,13 @@ INSERT INTO prestamos (numero_cuenta, fecha, plazo_pago, tipo_prestamo_id, estad
 (13, '2024-12-30', 36, 1, 'En proceso', 'Vigente'),
 (14, '2024-01-10', 48, 2, 'Rechazado', 'Vigente'),
 (15, '2024-02-14', 60, 3, 'En proceso', 'Vigente');
+
+
+CALL SP_AUTORIZAR_PRESTAMO(1,1);
+CALL SP_AUTORIZAR_PRESTAMO(3,3);
+CALL SP_AUTORIZAR_PRESTAMO(15,15);
+
+
+
+
+
