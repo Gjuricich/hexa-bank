@@ -21,6 +21,7 @@ public class UsuarioDaoImpl implements UsuarioDao {
 	private static final String list = "SELECT * FROM usuarios";
 	private static final String get = "SELECT * FROM usuarios WHERE usuario_id = ?";
 	private static final String queryExiste = "SELECT COUNT(*) FROM usuarios WHERE estado = 1 AND nombre_usuario = ?";
+	private static final String queryBuscar = "SELECT usuario_id, nombre_usuario, password, tipo_usuario_id FROM usuarios WHERE estado = 1 AND nombre_usuario = ?";
 	
 	
 	@Override
@@ -186,7 +187,44 @@ public class UsuarioDaoImpl implements UsuarioDao {
         return existe;
     }
 	
+	@Override
+    public Usuario buscarUsuario(String nombreUsuario) {
+        try 
+    	{
+    		Class.forName("com.mysql.jdbc.Driver");
+    	}catch (ClassNotFoundException e){
+    		e.printStackTrace();
+    	}
+        
+        Usuario usuario = null;
 
+        try {
+            Connection conexion = Conexion.getConexion().getSQLConexion();
+            PreparedStatement statement = conexion.prepareStatement(queryBuscar);
+            statement.setString(1, nombreUsuario);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+            	int id = resultSet.getInt("usuario_id");
+                String nombre = resultSet.getString("nombre_usuario");
+                String password = resultSet.getString("password");
+				TipoUsuarioDaoImpl tipoUsuarioDaoImpl = new TipoUsuarioDaoImpl();
+				TipoUsuario tipoUsuario = tipoUsuarioDaoImpl.get(resultSet.getInt("tipo_usuario_id"));
+
+                usuario = new Usuario();
+                usuario.setUsuarioId(id);
+                usuario.setNombreUsuario(nombre);
+                usuario.setPassword(password);
+                usuario.setTipoUsuario(tipoUsuario);
+            } 
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return usuario;
+        
+    }
 
 
 }
