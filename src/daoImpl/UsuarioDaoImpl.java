@@ -18,6 +18,7 @@ public class UsuarioDaoImpl implements UsuarioDao {
 
 	private static final String update = "UPDATE usuarios SET nombre_usuario = ?, password = ?,tipo_usuario_id = ? WHERE usuario_id = ?";
 	private static final String insert = "INSERT INTO usuarios(nombre_usuario, password, tipo_usuario_id) VALUES(?, ?, ?)";	
+	private static final String list = "SELECT * FROM usuarios";
 	private static final String get = "SELECT * FROM usuarios WHERE usuario_id = ?";
 	
 	
@@ -121,6 +122,40 @@ public class UsuarioDaoImpl implements UsuarioDao {
 		}
 		return null;
 	}
+
+	@Override
+	public ArrayList<Usuario> list() {
+		try 
+    	{
+    		Class.forName("com.mysql.jdbc.Driver");
+    	}catch (ClassNotFoundException e){
+    		e.printStackTrace();
+    	}
+		ArrayList<Usuario> list_usuarios = new ArrayList<Usuario>();
+		try {
+			Connection conexion = Conexion.getConexion().getSQLConexion();
+			Statement statement = conexion.createStatement();
+			ResultSet result_set = statement.executeQuery(list);
+			while(result_set.next()) {
+				
+				String nombre_usuario = result_set.getString("nombre_usuario");
+				String password = result_set.getString("password");
+				TipoUsuarioDaoImpl tipoUsuarioDaoImpl = new TipoUsuarioDaoImpl();
+				TipoUsuario tipo_usuario = tipoUsuarioDaoImpl.get(result_set.getInt("tipo_usuario_id"));
+				int id_usuario = result_set.getInt("usuario_id");
+				Usuario usuario = new Usuario(id_usuario,nombre_usuario,password,tipo_usuario);
+
+				list_usuarios.add(usuario);
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return list_usuarios;
+	}
+	
+	
 
 
 }
