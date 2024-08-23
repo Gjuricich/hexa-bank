@@ -20,9 +20,10 @@ import daoImpl.LocalidadDaoImpl;
 public class CuentaDaoImpl implements CuentaDao {
 	
 	private static final String list = "SELECT c.*, t.tipo_cuenta FROM cuentas c JOIN tiposcuentas t ON c.id_tipoCuenta = t.id_tipoCuenta WHERE c.estado = 1";	    
-	private static final String listPorDni = "SELECT c.*, t.tipo_cuenta FROM cuentas c JOIN tiposcuentas t ON c.id_tipoCuenta = t.id_tipoCuenta WHERE c.estado = 1 and c.dni = ?";	      
+	private static final String listPorDni = "SELECT c.*, t.tipo_cuenta FROM cuentas c JOIN tiposcuentas t ON c.id_tipoCuenta = t.id_tipoCuenta WHERE c.estado = 1 and c.dni = ?";	    
 	private static final String insert = "INSERT INTO cuentas(id_tipoCuenta, cbu, dni, fecha_creacion) VALUES((SELECT id_tipoCuenta FROM tiposcuentas WHERE tipo_cuenta = ?), ?, ?, CURDATE())";	    
 	private static final String delete = "UPDATE cuentas SET estado = 0 where numero_cuenta = ?";
+	private static final String prestamosPorCuenta = "SELECT COUNT(*) FROM prestamos WHERE numero_cuenta = ? AND estado_prestamo <> 'Rechazado' AND estado = 'Vigente'";
 	
 	@Override
 	public ArrayList<Cuenta> list() {
@@ -99,6 +100,8 @@ public class CuentaDaoImpl implements CuentaDao {
 
 	}
 
+	
+
 	@Override
 	public boolean insert(Cuenta cuenta_a_agregar) {
 		try 
@@ -141,6 +144,7 @@ public class CuentaDaoImpl implements CuentaDao {
 	    return isInsertExitoso;
 	}
 
+
 	@Override
 	public String delete(int nroCuenta) {
 		 try {
@@ -180,4 +184,35 @@ public class CuentaDaoImpl implements CuentaDao {
 
 	}
 	
+	
+	public boolean prestamosPorCuenta(int nroCuenta) {
+	    try {
+	        Class.forName("com.mysql.jdbc.Driver");
+	    } catch (ClassNotFoundException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+
+	    Connection conexion = Conexion.getConexion().getSQLConexion();
+	    PreparedStatement statement;
+	    boolean tienePrestamos = false;
+
+	    try {
+	        statement = conexion.prepareStatement(prestamosPorCuenta);
+	        statement.setInt(1, nroCuenta);
+	        ResultSet resultSet = statement.executeQuery();
+	        
+	        if (resultSet.next()) {
+	            int prestamosActivos = resultSet.getInt(1);
+	            tienePrestamos = prestamosActivos > 0;
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+
+	    return tienePrestamos;
+	}
+
+
+
 }
