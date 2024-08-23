@@ -22,7 +22,8 @@ public class PrestamoDaoImpl implements PrestamoDao {
     private static final String updateEstadoCancelado = "UPDATE prestamos SET estado = ? WHERE prestamo_id = ?";
     private static final String insert = "INSERT INTO prestamos(numero_cuenta, fecha, plazo_pago, tipo_prestamo_id, estado_prestamo) VALUES(?, ?, ?, ?, ?)";  
     private static final String list = "SELECT p.*, cli.nombre, cli.apellido FROM prestamos as p JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta JOIN clientes cli ON c.dni = cli.dni WHERE p.estado_prestamo = 'En proceso'";
-  
+    private static final String get = "SELECT * FROM prestamos WHERE prestamo_id = ?";
+   
     @Override
     public boolean insert(Prestamo prestamo) {
         try {
@@ -116,7 +117,44 @@ public class PrestamoDaoImpl implements PrestamoDao {
         return isUpdateExitoso;
     }
     
-  
+   
+    
+    @Override
+    public Prestamo get(int prestamo_id) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        PreparedStatement statement;
+        Connection conexion = Conexion.getConexion().getSQLConexion();
+        Cuenta cuenta = new Cuenta();
+
+        try {
+            statement = conexion.prepareStatement(get);
+            statement.setInt(1, prestamo_id);
+            ResultSet result_set = statement.executeQuery();
+            while (result_set.next()) {
+                int prestamoId = result_set.getInt("prestamo_id");
+                cuenta.setNumeroCuenta(result_set.getInt("numero_cuenta"));
+                java.sql.Date fecha = result_set.getDate("fecha");
+                int plazoPago = result_set.getInt("plazo_pago");
+                int tipoPrestamoId = result_set.getInt("tipo_prestamo_id");
+                String estadoPrestamo = result_set.getString("estado_prestamo");
+
+                TipoPrestamoDaoImpl tipoPrestamoDaoImpl = new TipoPrestamoDaoImpl();
+                TipoPrestamo tipoPrestamo = tipoPrestamoDaoImpl.get(tipoPrestamoId);
+                Cliente cliente = new Cliente();
+
+                Prestamo prestamo = new Prestamo(prestamoId, cuenta, cliente, tipoPrestamo, fecha, estadoPrestamo,plazoPago);
+                return prestamo;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     @Override
     public ArrayList<Prestamo> list() {
         try {
@@ -156,5 +194,6 @@ public class PrestamoDaoImpl implements PrestamoDao {
 
         return list_prestamos;
     }
-    
+   
+	
 }
