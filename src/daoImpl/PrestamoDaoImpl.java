@@ -18,9 +18,11 @@ import entidad.Cuenta;
 import entidad.TipoPrestamo;
 
 public class PrestamoDaoImpl implements PrestamoDao {
-     private static final String insert = "INSERT INTO prestamos(numero_cuenta, fecha, plazo_pago, tipo_prestamo_id, estado_prestamo) VALUES(?, ?, ?, ?, ?)";  
+    private static final String updateEstado = "UPDATE prestamos SET estado_prestamo = ? WHERE prestamo_id = ?";
+    private static final String updateEstadoCancelado = "UPDATE prestamos SET estado = ? WHERE prestamo_id = ?";
+    private static final String insert = "INSERT INTO prestamos(numero_cuenta, fecha, plazo_pago, tipo_prestamo_id, estado_prestamo) VALUES(?, ?, ?, ?, ?)";  
     private static final String list = "SELECT p.*, cli.nombre, cli.apellido FROM prestamos as p JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta JOIN clientes cli ON c.dni = cli.dni WHERE p.estado_prestamo = 'En proceso'";
-   
+  
     @Override
     public boolean insert(Prestamo prestamo) {
         try {
@@ -55,7 +57,66 @@ public class PrestamoDaoImpl implements PrestamoDao {
         return isInsertExitoso;
     }
 
+    @Override
+    public boolean update(int idPrestamo, String estado) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        PreparedStatement statement;
+        Connection conexion = Conexion.getConexion().getSQLConexion();
+        boolean isUpdateExitoso = false;
+        try {
+            statement = conexion.prepareStatement(updateEstado);
+            statement.setString(1, estado);
+            statement.setInt(2, idPrestamo);
 
+            if (statement.executeUpdate() > 0) {
+                conexion.commit();
+                isUpdateExitoso = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try {
+                conexion.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        }
+        return isUpdateExitoso;
+    }
+    
+    public boolean update(int idPrestamo) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        PreparedStatement statement;
+        Connection conexion = Conexion.getConexion().getSQLConexion();
+        boolean isUpdateExitoso = false;
+        try {
+            statement = conexion.prepareStatement(updateEstadoCancelado);
+            statement.setString(1, "Cancelado");
+            statement.setInt(2, idPrestamo);
+
+            if (statement.executeUpdate() > 0) {
+                conexion.commit();
+                isUpdateExitoso = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try {
+                conexion.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        }
+        return isUpdateExitoso;
+    }
+    
+  
     @Override
     public ArrayList<Prestamo> list() {
         try {
@@ -96,6 +157,4 @@ public class PrestamoDaoImpl implements PrestamoDao {
         return list_prestamos;
     }
     
-  
-	
 }
