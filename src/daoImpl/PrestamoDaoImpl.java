@@ -26,7 +26,8 @@ public class PrestamoDaoImpl implements PrestamoDao {
     private static final String call = "CALL SP_AUTORIZAR_PRESTAMO(?, ?)";
     private static final String obtenerPrestamosPorDni = "CALL ObtenerPrestamos(?, ?, ?, ?, ?, ?)";
     private static final String obtenerPrestamosSinDni = "CALL ObtenerPrestamosSinDni(?, ?, ?, ?, ?)";
-    
+    private static final String listIdPrestamosPorCliente = "SELECT p.prestamo_id, p.plazo_pago FROM prestamos as p INNER JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta INNER JOIN clientes cl ON c.dni = cl.dni WHERE cl.dni = ? AND p.estado_prestamo = 'Autorizado' AND p.estado = 'Vigente'";
+
     @Override
     public boolean insert(Prestamo prestamo) {
         try {
@@ -317,6 +318,36 @@ public class PrestamoDaoImpl implements PrestamoDao {
         return listaPrestamos;
     }
 
+	@Override
+	public ArrayList<Prestamo> listIdPrestamosPorCliente(String dni) {
+
+		 try {
+	            Class.forName("com.mysql.jdbc.Driver");
+	        } catch (ClassNotFoundException e) {
+	            e.printStackTrace();
+	        }
+	        ArrayList<Prestamo> listPrestamos = new ArrayList<Prestamo>();
+	        CuotaDaoImpl cuotaDao = new CuotaDaoImpl();
+	        PreparedStatement statement;
+	        Connection conexion = Conexion.getConexion().getSQLConexion();
+	        try {
+	            statement = conexion.prepareStatement(listIdPrestamosPorCliente);
+	            statement.setString(1, dni);
+	            ResultSet result_set = statement.executeQuery();
+	            while (result_set.next()) {
+	                int prestamoId = result_set.getInt("prestamo_id");
+	                int plazoPago = result_set.getInt("plazo_pago");
+	                Prestamo prestamo = new Prestamo();
+	                prestamo.setPlazoPago(plazoPago);
+	                prestamo.setPrestamoId(prestamoId);
+	                prestamo.setCuotas(cuotaDao.listPorIdPrestamo(prestamo));
+	                listPrestamos.add(prestamo);
+	            }
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
 	
+	        return listPrestamos;
+	}
 	
 }
