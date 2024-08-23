@@ -234,6 +234,41 @@ BEGIN
 END //
 DELIMITER ;
 
+DELIMITER //
+CREATE  PROCEDURE ObtenerPrestamosSinDni(
+	IN fechaInicio DATE,
+    IN fechaFin DATE,
+    IN estadoPrestamo VARCHAR(20),
+    IN importeMin DECIMAL(10, 2),
+    IN importeMax DECIMAL(10, 2)
+)
+BEGIN
+    SELECT
+        p.prestamo_id  ,
+        p.numero_cuenta  ,
+        p.fecha  ,
+        p.plazo_pago   ,
+        p.estado_prestamo ,
+        tp.importe_total,
+        tp.tipo_prestamo_id ,
+        c.dni  
+    FROM
+        prestamos p
+    JOIN
+        tipos_prestamo tp ON p.tipo_prestamo_id = tp.tipo_prestamo_id
+    JOIN
+        cuentas c ON p.numero_cuenta = c.numero_cuenta
+
+    WHERE
+        (tp.importe_total BETWEEN importeMin AND importeMax
+        or tp.importe_total BETWEEN importeMax AND importeMin)
+        AND( p.fecha BETWEEN fechaInicio AND fechaFin
+        or p.fecha BETWEEN fechaFin AND fechaInicio)
+
+        AND p.estado_prestamo = estadoPrestamo;
+END //
+DELIMITER ;
+
 
 INSERT INTO paises (nombre) VALUES 
 ('Argentina'), 
