@@ -20,6 +20,7 @@ public class UsuarioDaoImpl implements UsuarioDao {
 	private static final String insert = "INSERT INTO usuarios(nombre_usuario, password, tipo_usuario_id) VALUES(?, ?, ?)";	
 	private static final String list = "SELECT * FROM usuarios";
 	private static final String get = "SELECT * FROM usuarios WHERE usuario_id = ?";
+	private static final String queryExiste = "SELECT COUNT(*) FROM usuarios WHERE estado = 1 AND nombre_usuario = ?";
 	
 	
 	@Override
@@ -155,7 +156,37 @@ public class UsuarioDaoImpl implements UsuarioDao {
 		return list_usuarios;
 	}
 	
+	@Override
+    public boolean existeNombreUsuario(String nombre) {
+        try 
+    	{
+    		Class.forName("com.mysql.jdbc.Driver");
+    	}catch (ClassNotFoundException e){
+    		e.printStackTrace();
+    	}
+        
+        boolean existe = false;
+        
+        try {
+        	Connection conexion = Conexion.getConexion().getSQLConexion();
+        	PreparedStatement statement = conexion.prepareStatement(queryExiste);
+            statement.setString(1, nombre);
+            ResultSet resultSet = statement.executeQuery();
+            
+            if (resultSet.next()) {
+                int count = resultSet.getInt(1);
+                if (count > 0) {
+                    existe = true;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return existe;
+    }
 	
+
 
 
 }
