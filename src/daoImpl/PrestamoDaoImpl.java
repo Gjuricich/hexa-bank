@@ -23,6 +23,7 @@ public class PrestamoDaoImpl implements PrestamoDao {
     private static final String insert = "INSERT INTO prestamos(numero_cuenta, fecha, plazo_pago, tipo_prestamo_id, estado_prestamo) VALUES(?, ?, ?, ?, ?)";  
     private static final String list = "SELECT p.*, cli.nombre, cli.apellido FROM prestamos as p JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta JOIN clientes cli ON c.dni = cli.dni WHERE p.estado_prestamo = 'En proceso'";
     private static final String get = "SELECT * FROM prestamos WHERE prestamo_id = ?";
+    private static final String call = "CALL SP_AUTORIZAR_PRESTAMO(?, ?)";
    
     @Override
     public boolean insert(Prestamo prestamo) {
@@ -117,7 +118,41 @@ public class PrestamoDaoImpl implements PrestamoDao {
         return isUpdateExitoso;
     }
     
-   
+    public boolean update(int idPrestamo, int cuentaDestino) {
+    	 try {
+             Class.forName("com.mysql.jdbc.Driver");
+         } catch (ClassNotFoundException e) {
+             e.printStackTrace();
+         }
+
+         CallableStatement statement = null;
+         Connection conexion = Conexion.getConexion().getSQLConexion();
+         boolean isExitoso = false;
+
+         try {
+             statement = (CallableStatement) conexion.prepareCall(call);
+             statement.setInt(1, idPrestamo);
+             statement.setInt(2, cuentaDestino);
+
+             statement.execute();
+
+
+             conexion.commit();
+             isExitoso = true;
+             
+         } catch (SQLException e) {
+             e.printStackTrace();
+             try {
+                 conexion.rollback();
+                 isExitoso=false;
+             } catch (SQLException e1) {
+                 e1.printStackTrace();
+             }
+         } 
+         
+
+         return isExitoso;
+     }
     
     @Override
     public Prestamo get(int prestamo_id) {
@@ -194,6 +229,7 @@ public class PrestamoDaoImpl implements PrestamoDao {
 
         return list_prestamos;
     }
+    
    
 	
 }
