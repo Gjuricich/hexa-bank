@@ -21,11 +21,12 @@ public class CuentaDaoImpl implements CuentaDao {
 	
 	private static final String list = "SELECT c.*, t.tipo_cuenta FROM cuentas c JOIN tiposcuentas t ON c.id_tipoCuenta = t.id_tipoCuenta WHERE c.estado = 1";	    
 	private static final String listPorDni = "SELECT c.*, t.tipo_cuenta FROM cuentas c JOIN tiposcuentas t ON c.id_tipoCuenta = t.id_tipoCuenta WHERE c.estado = 1 and c.dni = ?";	    
-	private static final String insert = "INSERT INTO cuentas(id_tipoCuenta, cbu, dni, fecha_creacion) VALUES((SELECT id_tipoCuenta FROM tiposcuentas WHERE tipo_cuenta = ?), ?, ?, CURDATE())";	
+	private static final String insert = "INSERT INTO cuentas(id_tipoCuenta, cbu, dni, fecha_creacion) VALUES((SELECT id_tipoCuenta FROM tiposcuentas WHERE tipo_cuenta = ?), ?, ?, CURDATE())";	    
 	private static final String delete = "UPDATE cuentas SET estado = 0 where numero_cuenta = ?";
 	private static final String prestamosPorCuenta = "SELECT COUNT(*) FROM prestamos WHERE numero_cuenta = ? AND estado_prestamo <> 'Rechazado' AND estado = 'Vigente'";
-	private static final String update = "UPDATE cuentas SET id_tipoCuenta = (SELECT id_tipoCuenta FROM tiposcuentas WHERE tipo_cuenta = ?), saldo = ? WHERE numero_cuenta = ?";	
+	private static final String update = "UPDATE cuentas SET id_tipoCuenta = (SELECT id_tipoCuenta FROM tiposcuentas WHERE tipo_cuenta = ?), saldo = ? WHERE numero_cuenta = ?";	    
 	private static final String get =  "SELECT c.*, t.tipo_cuenta FROM cuentas c JOIN tiposcuentas t ON c.id_tipoCuenta = t.id_tipoCuenta WHERE c.numero_cuenta = ?";    
+	private static final String getlastId = "SELECT c.numero_cuenta FROM cuentas c ORDER BY c.numero_cuenta DESC LIMIT 1";	    
 
 	@Override
 	public ArrayList<Cuenta> list() {
@@ -62,6 +63,7 @@ public class CuentaDaoImpl implements CuentaDao {
 
 	    return list_cuentas;
 	}
+	
 	
 	@Override
 	public ArrayList<Cuenta> listCuentasPorCliente(String dni) {
@@ -103,7 +105,6 @@ public class CuentaDaoImpl implements CuentaDao {
 	}
 
 	
-
 	@Override
 	public boolean insert(Cuenta cuenta_a_agregar) {
 		try 
@@ -187,6 +188,7 @@ public class CuentaDaoImpl implements CuentaDao {
 	}
 	
 	
+	@Override
 	public boolean prestamosPorCuenta(int nroCuenta) {
 	    try {
 	        Class.forName("com.mysql.jdbc.Driver");
@@ -214,8 +216,6 @@ public class CuentaDaoImpl implements CuentaDao {
 
 	    return tienePrestamos;
 	}
-
-
 
 
 	@Override
@@ -252,7 +252,6 @@ public class CuentaDaoImpl implements CuentaDao {
 	}
 
 
-
 	@Override
 	public Cuenta get(int nroCuenta) {
 	    try {
@@ -286,6 +285,30 @@ public class CuentaDaoImpl implements CuentaDao {
 	        e.printStackTrace();
 	    }
 	    return null;
+	}
+	
+	
+	@Override
+	public int getLastId() {
+	    try {
+	        Class.forName("com.mysql.jdbc.Driver");
+	    } catch (ClassNotFoundException e) {
+	        e.printStackTrace();
+	    }
+
+	    PreparedStatement statement;
+	    Connection conexion = Conexion.getConexion().getSQLConexion();
+	    try {
+	        statement = conexion.prepareStatement(getlastId);
+	        ResultSet result_set = statement.executeQuery();
+	        while(result_set.next()) {
+	            int lastId = result_set.getInt("numero_cuenta");
+	            return lastId;
+	        }
+	    } catch(Exception e) {
+	        e.printStackTrace();
+	    }
+	    return 0;
 	}
 	
 }
