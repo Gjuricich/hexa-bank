@@ -21,8 +21,9 @@ El proyecto presenta una arquitectura en capas y se despliega mediante el servid
 
 ## ¿Cómo utilizar HexaBank?
 
+<img src="portada.jpeg" alt="portada" width="550"/>
 
-Para ejecutar este proyecto es necesartio tener instalados los siguientes software:
+Para ejecutar este proyecto es necesario tener instalado lo siguiente:
    - **Java JDK 12** o superior.
    - **Eclipse IDE**.
    - **Apache Tomcat 8.5**  o superior.
