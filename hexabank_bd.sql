@@ -115,6 +115,67 @@ CREATE TABLE transferencias (
     FOREIGN KEY (movimiento_id) REFERENCES movimientos(movimiento_id)
 );
 
+DELIMITER //
+CREATE PROCEDURE SP_BAJA_CLIENTE(
+    _dni VARCHAR(8),
+    _idUsuario INT
+)
+BEGIN
+      UPDATE clientes SET estado = FALSE WHERE dni = _dni;
+      UPDATE cuentas SET estado = FALSE  WHERE dni = _dni;
+      UPDATE usuarios SET estado = FALSE WHERE usuario_id = _idUsuario;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE SP_TRANSFERENCIAS(
+    cbuOrigen VARCHAR(22),
+    cbuDestino VARCHAR(22),
+    importe DECIMAL(10,2),
+    detalle VARCHAR(255)
+)
+BEGIN
+	DECLARE fechaActual  DATE DEFAULT CURDATE();
+    DECLARE saldoOrigen DECIMAL(10,2);
+    DECLARE saldoDestino DECIMAL(10,2);
+    DECLARE cuentaDestinoExiste BOOLEAN;
+    DECLARE idMovOrigen INT;
+    DECLARE idMovDestino INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    SELECT saldo INTO saldoOrigen FROM cuentas WHERE cbu = cbuOrigen;
+    IF saldoOrigen < importe THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Saldo insuficiente en la cuenta de origen';
+    END IF;
+	SELECT saldo INTO saldoDestino FROM cuentas WHERE cbu = cbuOrigen;
+
+	INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento)
+	VALUES ((SELECT numero_cuenta FROM cuentas WHERE cbu = cbuOrigen),fechaActual,detalle,-importe,'transferencia');
+
+	SET idMovOrigen = LAST_INSERT_ID();
+
+	INSERT INTO transferencias (dni, cbu_origen, cbu_destino, fecha, detalle, importe, movimiento_id)
+	VALUES ((SELECT dni FROM cuentas WHERE cbu = cbuOrigen),cbuOrigen,cbuDestino,fechaActual, detalle, importe,idMovOrigen);
+	UPDATE cuentas SET saldo = saldo - importe WHERE cbu = cbuOrigen;
+    
+	SELECT COUNT(*) INTO cuentaDestinoExiste FROM cuentas WHERE cbu = cbuDestino;
+	IF cuentaDestinoExiste = 1 THEN
+            INSERT INTO movimientos (numero_cuenta, fecha, detalle, importe, tipo_movimiento) VALUES ((SELECT numero_cuenta FROM cuentas WHERE cbu = cbuDestino),fechaActual, detalle,importe,'transferencia');
+            INSERT INTO transferencias (dni, cbu_origen, cbu_destino, fecha, detalle, importe, movimiento_id)
+			VALUES ((SELECT dni FROM cuentas WHERE cbu = cbuOrigen),cbuOrigen,cbuDestino,fechaActual, detalle, importe,idMovOrigen);
+            UPDATE cuentas SET saldo = saldo + importe WHERE cbu = cbuDestino;
+	END IF;
+    COMMIT;
+END //
+DELIMITER ;
+
 
 INSERT INTO paises (nombre) VALUES 
 ('Argentina'), 
