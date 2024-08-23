@@ -269,6 +269,42 @@ BEGIN
 END //
 DELIMITER ;
 
+DELIMITER //
+CREATE PROCEDURE ObtenerPrestamos(
+    IN dniCliente VARCHAR(8),
+    IN fechaInicio DATE,
+    IN fechaFin DATE,
+    IN estadoPrestamo VARCHAR(20),
+    IN importeMin DECIMAL(10, 2),
+    IN importeMax DECIMAL(10, 2)
+)
+BEGIN
+    SELECT
+        p.prestamo_id as prestamo_id ,
+        p.numero_cuenta as numero_cuenta,
+        p.fecha as fecha,
+        p.plazo_pago as plazo_pago,
+        p.estado_prestamo as estado_prestamo,
+        tp.tipo_prestamo_id as tipo_prestamo_id,
+        c.dni as dni
+    FROM
+        prestamos p
+    JOIN
+        tipos_prestamo tp ON p.tipo_prestamo_id = tp.tipo_prestamo_id
+    JOIN
+        cuentas c ON p.numero_cuenta = c.numero_cuenta
+    JOIN
+        clientes cl ON cl.dni = c.dni
+    WHERE
+        (tp.importe_total BETWEEN importeMin AND importeMax
+        or tp.importe_total BETWEEN importeMax AND importeMin)
+        AND( p.fecha BETWEEN fechaInicio AND fechaFin
+        or p.fecha BETWEEN fechaFin AND fechaInicio)
+        AND cl.dni LIKE CONCAT('%', dniCliente, '%')
+        AND p.estado_prestamo = estadoPrestamo;
+END //
+DELIMITER ;
+
 
 INSERT INTO paises (nombre) VALUES 
 ('Argentina'), 
