@@ -24,7 +24,9 @@ public class PrestamoDaoImpl implements PrestamoDao {
     private static final String list = "SELECT p.*, cli.nombre, cli.apellido FROM prestamos as p JOIN cuentas c ON p.numero_cuenta = c.numero_cuenta JOIN clientes cli ON c.dni = cli.dni WHERE p.estado_prestamo = 'En proceso'";
     private static final String get = "SELECT * FROM prestamos WHERE prestamo_id = ?";
     private static final String call = "CALL SP_AUTORIZAR_PRESTAMO(?, ?)";
-   
+    private static final String obtenerPrestamosPorDni = "CALL ObtenerPrestamos(?, ?, ?, ?, ?, ?)";
+    private static final String obtenerPrestamosSinDni = "CALL ObtenerPrestamosSinDni(?, ?, ?, ?, ?)";
+    
     @Override
     public boolean insert(Prestamo prestamo) {
         try {
@@ -230,6 +232,91 @@ public class PrestamoDaoImpl implements PrestamoDao {
         return list_prestamos;
     }
     
-   
+    public ArrayList<Prestamo> obtenerPrestamosPorDni(String dniCliente, Date fechaInicio, Date fechaFin,
+            String estadoPrestamo, BigDecimal importeMin, BigDecimal importeMax) {
+        ArrayList<Prestamo> listaPrestamos = new ArrayList<>();
+        try {
+            CallableStatement statement = null;
+            Connection conexion = Conexion.getConexion().getSQLConexion();
+            statement = (CallableStatement) conexion.prepareCall(obtenerPrestamosPorDni);
+            statement.setString(1, dniCliente);
+            statement.setDate(2, fechaInicio);
+            statement.setDate(3, fechaFin);
+            statement.setString(4, estadoPrestamo);
+            statement.setBigDecimal(5, importeMin);
+            statement.setBigDecimal(6, importeMax);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int prestamoId = resultSet.getInt("prestamo_id");
+                int numeroCuenta = resultSet.getInt("numero_cuenta");
+                Date fecha = resultSet.getDate("fecha");
+                int plazoPago = resultSet.getInt("plazo_pago");
+                int tipoPrestamoId = resultSet.getInt("tipo_prestamo_id");
+
+                Cuenta cuenta = new Cuenta();
+                Cliente cliente = new Cliente();
+                TipoPrestamo tipoPrestamo  = new TipoPrestamo();
+                
+                TipoPrestamoDaoImpl tipoPrestamoDaoImpl = new TipoPrestamoDaoImpl();
+                tipoPrestamo = tipoPrestamoDaoImpl.get(tipoPrestamoId);
+                
+                CuentaDaoImpl cuentaDaoImpl = new CuentaDaoImpl();
+                cuenta =  cuentaDaoImpl.get(numeroCuenta);
+                
+                ClienteDaoImpl clienteDaoImpl = new ClienteDaoImpl();
+                cliente = clienteDaoImpl.get(cuenta.getCliente().getDni());
+
+                Prestamo prestamo = new Prestamo(prestamoId, cuenta, cliente, tipoPrestamo, fecha, estadoPrestamo, plazoPago);
+                listaPrestamos.add(prestamo);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return listaPrestamos;
+    }
+
+    public ArrayList<Prestamo> obtenerPrestamosSinDni(Date fechaInicio, Date fechaFin,
+            String estadoPrestamo, BigDecimal importeMin, BigDecimal importeMax) {
+        ArrayList<Prestamo> listaPrestamos = new ArrayList<>();
+        try {
+            CallableStatement statement = null;
+            Connection conexion = Conexion.getConexion().getSQLConexion();
+            statement = (CallableStatement) conexion.prepareCall(obtenerPrestamosSinDni);
+            statement.setDate(1, fechaInicio);
+            statement.setDate(2, fechaFin);
+            statement.setString(3, estadoPrestamo);
+            statement.setBigDecimal(4, importeMin);
+            statement.setBigDecimal(5, importeMax);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int prestamoId = resultSet.getInt("prestamo_id");
+                int numeroCuenta = resultSet.getInt("numero_cuenta");
+                Date fecha = resultSet.getDate("fecha");
+                int plazoPago = resultSet.getInt("plazo_pago");
+                int tipoPrestamoId = resultSet.getInt("tipo_prestamo_id");
+                
+                Cuenta cuenta = new Cuenta();
+                Cliente cliente = new Cliente();
+                TipoPrestamo tipoPrestamo  = new TipoPrestamo();
+                
+                TipoPrestamoDaoImpl tipoPrestamoDaoImpl = new TipoPrestamoDaoImpl();
+                tipoPrestamo = tipoPrestamoDaoImpl.get(tipoPrestamoId);
+                
+                CuentaDaoImpl cuentaDaoImpl = new CuentaDaoImpl();
+                cuenta =  cuentaDaoImpl.get(numeroCuenta);
+                
+                ClienteDaoImpl clienteDaoImpl = new ClienteDaoImpl();
+                cliente = clienteDaoImpl.get(cuenta.getCliente().getDni());
+
+                Prestamo prestamo = new Prestamo(prestamoId, cuenta, cliente, tipoPrestamo, fecha, estadoPrestamo, plazoPago);
+                listaPrestamos.add(prestamo);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return listaPrestamos;
+    }
+
+	
 	
 }
