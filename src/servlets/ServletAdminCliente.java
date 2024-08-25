@@ -62,6 +62,23 @@ public class ServletAdminCliente extends HttpServlet {
     		RequestDispatcher dispatcher = request.getRequestDispatcher("/Login.jsp");
     		dispatcher.forward(request, response);
     	}
+        if (request.getParameter("btnAgregarCliente") != null) {
+    		cargarDesplegables(request);
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/AgregarCliente.jsp");
+            dispatcher.forward(request, response);
+            
+        }else if (request.getParameter("btnAdminClientes") != null) {
+			listaClientes1 = clienteNegocioImpl.list();
+            request.setAttribute("Lista_Clientes", listaClientes1);
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/ClientesListar.jsp");
+            dispatcher.forward(request, response);
+            
+        }else if (request.getParameter("btnDetalle") != null) {
+            String dni = request.getParameter("dni");
+            Cliente auxCliente = (Cliente)listaClientes1.stream().filter(x -> x.getDni().equals(dni)).findFirst().orElse(null);
+            request.setAttribute("ClienteDetalle", auxCliente);
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/DetalleCliente.jsp");
+            dispatcher.forward(request, response);}
     	
     	
     	
@@ -78,6 +95,15 @@ public class ServletAdminCliente extends HttpServlet {
     	
     	
     }
+ 
+        private void cargarDesplegables(HttpServletRequest request) {
+    	listaPais = paisNegocioImpl.list();    	
+      	request.setAttribute("Lista_Paises", listaPais);
+      	listaLocalidad = localidadNegocioImpl.list();
+      	request.setAttribute("Lista_Localidades", listaLocalidad);
+      	listaProvincia = provinciaNegocioImpl.list();
+      	request.setAttribute("Lista_Provincias", listaProvincia);
+	}
     
     
     
