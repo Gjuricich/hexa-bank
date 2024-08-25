@@ -78,7 +78,24 @@ public class ServletAdminCliente extends HttpServlet {
             Cliente auxCliente = (Cliente)listaClientes1.stream().filter(x -> x.getDni().equals(dni)).findFirst().orElse(null);
             request.setAttribute("ClienteDetalle", auxCliente);
             RequestDispatcher dispatcher = request.getRequestDispatcher("/DetalleCliente.jsp");
-            dispatcher.forward(request, response);}
+            dispatcher.forward(request, response);
+        }else if (request.getParameter("btnModificar") != null) {
+            String dni = request.getParameter("dni");
+            Cliente auxCliente = clienteNegocioImpl.get(dni);
+            request.setAttribute("ClienteDetalle", auxCliente);
+            cargarDesplegables(request);
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/ModificarCliente.jsp");
+            dispatcher.forward(request, response);
+            
+        }else if(request.getParameter("btnEliminar") != null) {
+        	String dni = request.getParameter("dni");
+			String respuesta = clienteNegocioImpl.delete(clienteNegocioImpl.get(dni));
+            session.setAttribute("respuesta", respuesta);
+        	listaClientes1 = clienteNegocioImpl.list();
+            request.setAttribute("Lista_Clientes", listaClientes1);   
+        	RequestDispatcher dispatcher = request.getRequestDispatcher("/ClientesListar.jsp");
+        	dispatcher.forward(request, response);
+        }    
     	
     	
     	
