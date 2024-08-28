@@ -36,6 +36,11 @@ public class ServletAdminCuentas extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		HttpSession session = request.getSession();
 		
+		if(request.getParameter("btnAgregarCuenta")!=null)
+	    {
+	    	RequestDispatcher dispatcher = request.getRequestDispatcher("/AgregarCuenta.jsp");
+			dispatcher.forward(request, response);
+	    }
 		
 		if(request.getParameter("btnAdminCuentas")!=null)
 	    {
@@ -105,9 +110,55 @@ public class ServletAdminCuentas extends HttpServlet {
 	        RequestDispatcher dispatcher = request.getRequestDispatcher("/ListarCuentas.jsp");
 	        dispatcher.forward(request, response);
 	    } 
-		
-	
+	    
+	    else if (request.getParameter("btnAgregarNuevaCuenta") != null) {
+	       	    	
+	    	String dni = request.getParameter("dni");
+	        List<Cliente> listaCliente = clienteNegocioImpl.list();
+	        List<Cliente> auxListaCliente = listaCliente.stream().filter(x -> x.getDni().equals(dni)).collect(Collectors.toList());
+
+	        listaCuentas = cuentaNegocioImpl.list();
+	        List<Cuenta> auxLista = listaCuentas.stream().filter(x -> x.getCliente().getDni().equals(dni)).collect(Collectors.toList());
+
+	        // Verificamos que el cliente exista
+	        
+	        if (auxListaCliente == null || auxListaCliente.isEmpty()) {
+	        	
+	        		session.setAttribute("respuesta", "Cliente inexistente");
+	                RequestDispatcher dispatcher = request.getRequestDispatcher("/AgregarCuenta.jsp");
+	                dispatcher.forward(request, response);
+	                return;
+	        	
+	        } else if (auxLista.size() == 3) {
+	        	session.setAttribute("respuesta", "El cliente nro " + auxLista.get(0).getCliente().getNombre() + " " + auxLista.get(0).getCliente().getApellido() + " ya ha alcanzado su cantidad maxima de cuentas (3 cuentas por cliente)");
+	            RequestDispatcher dispatcher = request.getRequestDispatcher("/AgregarCuenta.jsp");
+	            dispatcher.forward(request, response);
+	            return;
+	        } else {
+	        	 System.out.println("inserto");
+	            String tipoCuenta = request.getParameter("tipoCuenta");
+	            int id = cuentaNegocioImpl.getLastId() + 1;
+                
+	            String cbu = String.format("%022d", id);  
+
+	            Cuenta newCuenta = new Cuenta();
+	            Cliente cliente = clienteNegocioImpl.get(dni);
+	            newCuenta.setCliente(cliente);
+	            newCuenta.setCbu(cbu);
+	            newCuenta.setTipoCuenta(tipoCuenta);
+
+	            boolean inserto = cuentaNegocioImpl.insert(newCuenta);
+	            if (inserto) {
+	            	session.setAttribute("respuesta", "La cuenta para el DNI: "+ dni + " fue agregada exitosamente");
+	            } else {
+	            	session.setAttribute("respuesta", "Error. La cuenta no se pudo agregar");
+	            }
+	            RequestDispatcher dispatcher = request.getRequestDispatcher("/AgregarCuenta.jsp");
+	            dispatcher.forward(request, response);
+	        }
+	    }
 	}
-	
+
+
 
 }
