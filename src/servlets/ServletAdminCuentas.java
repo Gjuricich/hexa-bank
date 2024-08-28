@@ -36,7 +36,7 @@ public class ServletAdminCuentas extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		HttpSession session = request.getSession();
 		
-
+		
 		if(request.getParameter("btnAdminCuentas")!=null)
 	    {
 			listaCuentas = cuentaNegocioImpl.list();
@@ -55,7 +55,19 @@ public class ServletAdminCuentas extends HttpServlet {
 			dispatcher.forward(request, response);
 	    }
 		
-		
+		else if(request.getParameter("btnEliminar") != null) {
+			try {
+	        	int nroCuenta = Integer.parseInt(request.getParameter("nroCuenta"));
+				String resultadoBaja = cuentaNegocioImpl.delete(nroCuenta);
+				session.setAttribute("respuesta", resultadoBaja);
+	        	listaCuentas = cuentaNegocioImpl.list();
+	            request.setAttribute("Lista_Cuentas", listaCuentas);   
+	        	RequestDispatcher dispatcher = request.getRequestDispatcher("/ListarCuentas.jsp");
+	        	dispatcher.forward(request, response);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -93,8 +105,9 @@ public class ServletAdminCuentas extends HttpServlet {
 	        RequestDispatcher dispatcher = request.getRequestDispatcher("/ListarCuentas.jsp");
 	        dispatcher.forward(request, response);
 	    } 
-	    
-	    
+		
+	
 	}
+	
 
 }
