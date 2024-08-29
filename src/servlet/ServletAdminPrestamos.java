@@ -138,5 +138,67 @@ public class ServletAdminPrestamos extends HttpServlet {
             
             
             
+            
+
+    		int cuotasSeleccionadas1 =12;
+            BigDecimal montoSeleccionado1 = new BigDecimal("500000.00");
+            TipoPrestamo auxTipoPrestamo1 = tipoPrestamoImpl.get(cuotasSeleccionadas1, montoSeleccionado1);
+
+          
+           
+
+            request.setAttribute("Monto", auxTipoPrestamo1.getImporteTotal());
+            request.setAttribute("Cuotas", auxTipoPrestamo1.getNroCuotas());
+            request.setAttribute("interes", auxTipoPrestamo1.getInteresAnual());
+            request.setAttribute("valorCuota", auxTipoPrestamo1.getCuotaMensual());
+            request.setAttribute("montoFinal", auxTipoPrestamo1.getImporteIntereses());
+            request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente);
+            
+            
+            Cliente cliente = (Cliente)session.getAttribute("cliente");
+			cuentasPorCliente = cuentaNegocioImpl.listCuentasPorCliente(cliente.getDni());
+		    request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente);
+         	listaPrestamos = prestamoImpl.list();
+         	
+         	RequestDispatcher dispatcher = request.getRequestDispatcher("/SolicitarPrestamo.jsp");
+ 	        dispatcher.forward(request, response);
+	        
+	        
+	    }
+	     else if (request.getParameter("Cuotas") == null && request.getParameter("btnSolicitar")!= null  ) {
+	    	    session.setAttribute("respuesta", "Elegir monto y y cuotas");
+	    	    Cliente cliente = (Cliente)session.getAttribute("cliente");
+				cuentasPorCliente = cuentaNegocioImpl.listCuentasPorCliente(cliente.getDni());
+			    request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente);
+	         	listaPrestamos = prestamoImpl.list();
+		        RequestDispatcher dispatcher = request.getRequestDispatcher("/SolicitarPrestamo.jsp");
+		        dispatcher.forward(request, response);
+		        
+		    } 
+	     else if (request.getParameter("Cuotas") != null && request.getParameter("btnSolicitar")== null  ) {
+		    	
+		        int cuotasSeleccionadas = Integer.parseInt(cuotas);
+		        BigDecimal montoSeleccionado = new BigDecimal(monto);
+	            TipoPrestamo auxTipoPrestamo = tipoPrestamoImpl.get(cuotasSeleccionadas, montoSeleccionado);
+
+		        BigDecimal montoInteres = auxTipoPrestamo.getImporteIntereses();
+		        montoFinal = montoSeleccionado.add(montoInteres).toString();
+		        interes = montoInteres.toString();
+		        valorCuota = auxTipoPrestamo.getCuotaMensual().toString();
+
+		        request.setAttribute("Monto", monto);
+		        request.setAttribute("Cuotas", cuotas);
+		        request.setAttribute("interes", auxTipoPrestamo.getInteresAnual());
+		        request.setAttribute("valorCuota", auxTipoPrestamo.getCuotaMensual());
+		        request.setAttribute("montoFinal", auxTipoPrestamo.getImporteIntereses());
+		        request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente);
+
+		        RequestDispatcher dispatcher = request.getRequestDispatcher("/SolicitarPrestamo.jsp");
+		        dispatcher.forward(request, response);
+		        
+		    } 
+		    
+	    
+	}
 
 }
