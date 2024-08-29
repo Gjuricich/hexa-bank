@@ -48,6 +48,18 @@ public class ServletReportes extends HttpServlet {
 	        RequestDispatcher dispatcher = request.getRequestDispatcher("/Reportes.jsp");
 	        dispatcher.forward(request, response);
 	        
+	    } else if(request.getParameter("btnDescargar")!=null) {
+	        String reporte = request.getParameter("reporte");
+	        request.setAttribute("MostrarForm", "NoMostrarForm");
+	        response.setContentType("text/plain");
+	        response.setHeader("Content-Disposition", "attachment;filename=reporte.txt");
+
+	        PrintWriter out = response.getWriter();
+	        out.print(reporte);
+	        out.flush();
+	        out.close();
+	        
+	        return;
 	    } 
 	}
 }
