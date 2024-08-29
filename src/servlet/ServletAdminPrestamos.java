@@ -217,6 +217,21 @@ public class ServletAdminPrestamos extends HttpServlet {
  	    	RequestDispatcher dispatcher = request.getRequestDispatcher("/ListarSolicitudesPrestamos.jsp");
  			dispatcher.forward(request, response);
 	    	
+	    } else if (request.getParameter("btnRechazar") != null) {
+	    	
+	    	boolean rechazado = prestamoImpl.update(Integer.parseInt((request.getParameter("numeroPrestamo"))),"Rechazado");
+	    	
+	        if(rechazado) {
+	        	session.setAttribute("respuesta", "Pr�stamo rechazado con �xito");
+            }
+            else {
+            	session.setAttribute("respuesta", "Error. No fue posible aprobar el prestamo");
+            }
+	    	listaPrestamos = prestamoImpl.list();
+	        request.setAttribute("Lista_Prestamos", listaPrestamos);
+	        
+	    	RequestDispatcher dispatcher = request.getRequestDispatcher("/ListarSolicitudesPrestamos.jsp");
+			dispatcher.forward(request, response);
 	    }
 	}
 
