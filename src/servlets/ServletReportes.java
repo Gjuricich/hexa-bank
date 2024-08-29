@@ -41,4 +41,13 @@ public class ServletReportes extends HttpServlet {
 	}
 
 
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		HttpSession session = request.getSession();  
+	    if(request.getParameter("btnAtras")!=null) {
+	        request.setAttribute("MostrarForm", "MostrarForm");
+	        RequestDispatcher dispatcher = request.getRequestDispatcher("/Reportes.jsp");
+	        dispatcher.forward(request, response);
+	        
+	    } 
+	}
 }
