@@ -60,6 +60,49 @@ public class ServletReportes extends HttpServlet {
 	        out.close();
 	        
 	        return;
-	    } 
+	    } else if(request.getParameter("btnGenerarReporte")!=null) {
+	    	
+	        String fmin = request.getParameter("fechaInicio");
+	        String fmax = request.getParameter("fechaFin");
+	        String montoMin = request.getParameter("importeMin");
+	        String montoMax = request.getParameter("importeMax");
+	        Date fechaMin = Date.valueOf(fmin);
+	        Date fechaMAx = Date.valueOf(fmax);
+	        String estadoPrestamo = request.getParameter("estado");
+	        BigDecimal bdMontoMin = new BigDecimal(montoMin);
+	        BigDecimal bdMontoMax = new BigDecimal(montoMax);
+	        String dni = request.getParameter("DNIclienteReporte");
+	        
+	        ClienteNegocioImpl cNegocio =new ClienteNegocioImpl();
+	        boolean existe = cNegocio.existeCliente(dni);
+
+			if (dni.isEmpty() || dni == null) {
+				listaTipoPrestamos = prestamoImpl.obtenerPrestamosSinDni(fechaMin, fechaMAx, estadoPrestamo, bdMontoMin,bdMontoMax);
+			} else if (!existe) {
+ 				   
+                session.setAttribute("respuesta", "El cliente ingresado no existe.");
+                request.setAttribute("MostrarForm", "MostrarForm");
+    	    	RequestDispatcher dispatcher = request.getRequestDispatcher("/Reportes.jsp");
+    			dispatcher.forward(request, response);
+
+    	        return;
+                
+			} else {
+				listaTipoPrestamos = prestamoImpl.obtenerPrestamosPorDni(dni, fechaMin, fechaMAx, estadoPrestamo,bdMontoMin, bdMontoMax);
+
+			}
+
+	        String textAreaReporte = "";
+	        textAreaReporte = "   Nombre y Apellido   " + "       DNI       " + "   Fecha de solicitud   " + "   Importe solicitado   " + "   Estado   "+ "\n";
+	        for(Prestamo prestamo : listaTipoPrestamos) {
+		        textAreaReporte += "------------------------------------------------------------------------------------------------------" + "\n";
+	            textAreaReporte +="     "+ prestamo.getCliente().getNombre() + " " + prestamo.getCliente().getApellido() + "             "  + prestamo.getCliente().getDni() + "         "  + prestamo.getFecha().toString() + "                " + prestamo.getTipoPrestamo().getImporteTotal() + "              "  + prestamo.getEstado() + "\n";
+	        }
+
+	        request.setAttribute("textAreaReporte", textAreaReporte);
+	        request.setAttribute("MostrarForm", "NoMostrarForm");
+	        RequestDispatcher dispatcher = request.getRequestDispatcher("/Reportes.jsp");
+	        dispatcher.forward(request, response);
+	    }
 	}
 }
