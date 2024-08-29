@@ -199,6 +199,25 @@ public class ServletAdminPrestamos extends HttpServlet {
 		    } 
 		    
 	    
+	    else if(request.getParameter("btnAutorizar") != null) {
+	    	
+	    	boolean autorizo = prestamoImpl.update(Integer.parseInt((request.getParameter("numeroPrestamo"))),Integer.parseInt(request.getParameter("cuentaDestino")));
+
+            if(autorizo) {
+            	session.setAttribute("respuesta", "Pr�stamo aprobado con �xito");
+            }
+            else {
+            	session.setAttribute("respuesta", "Error. No fue posible aprobar el prestamo");
+            }
+            
+            listaPrestamos = prestamoImpl.list();
+ 	        
+            request.setAttribute("Lista_Prestamos", listaPrestamos);
+ 	        
+ 	    	RequestDispatcher dispatcher = request.getRequestDispatcher("/ListarSolicitudesPrestamos.jsp");
+ 			dispatcher.forward(request, response);
+	    	
+	    }
 	}
 
 }
