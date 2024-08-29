@@ -87,5 +87,56 @@ public class ServletAdminPrestamos extends HttpServlet {
 
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	}
+		HttpSession session = request.getSession();
+		
+		String monto = request.getParameter("Monto");
+	    String cuotas = request.getParameter("Cuotas");
+	    String interes = request.getParameter("interes");
+	    String valorCuota = request.getParameter("valorCuota");
+	    String montoFinal = request.getParameter("montoFinal");
+	    String nroCuenta = request.getParameter("CuentaDestino");
+	    
+
+
+
+	     if (request.getParameter("btnSolicitar") != null  ) {
+	        
+	    	monto = request.getParameter("Monto");
+		    cuotas = request.getParameter("Cuotas");
+		    interes = request.getParameter("interes");
+		    valorCuota = request.getParameter("valorCuota");
+		    montoFinal = request.getParameter("montoFinal");
+	    	int cuotasSeleccionadas = Integer.parseInt(cuotas);
+		    BigDecimal montoSeleccionado = new BigDecimal(monto);
+		    BigDecimal interesSeleccionado = new BigDecimal(interes);
+		    BigDecimal valorCuotaSeleccionado = new BigDecimal(valorCuota);
+	        Cuenta auxCuenta = new Cuenta();
+	        auxCuenta.setNumeroCuenta(Integer.parseInt(request.getParameter("CuentaDestino")));
+		    TipoPrestamo auxTipoPrestamo = tipoPrestamoImpl.get(cuotasSeleccionadas, montoSeleccionado);
+
+	     
+	         
+	        long millis = System.currentTimeMillis();
+            Date fecha =  new Date(millis);
+            int plazoPago = auxTipoPrestamo.getNroCuotas();
+             
+            Prestamo prestamo = new Prestamo(
+          		  auxCuenta,
+          		  auxTipoPrestamo,
+          		  fecha,
+          		  "En proceso",
+          		  plazoPago);
+             
+            boolean inserto = prestamoImpl.insert(prestamo);
+
+            if(inserto) {
+            	session.setAttribute("respuesta", "Se solicito el prestamo");
+            }
+            else {
+            	session.setAttribute("respuesta", "No se pudo solicitar el prestamo");
+            }
+            
+            
+            
+
 }
