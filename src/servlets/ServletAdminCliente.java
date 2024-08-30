@@ -62,7 +62,9 @@ public class ServletAdminCliente extends HttpServlet {
     		RequestDispatcher dispatcher = request.getRequestDispatcher("/Login.jsp");
     		dispatcher.forward(request, response);
     	}
-        if (request.getParameter("btnAgregarCliente") != null) {
+    	
+    	
+    	if (request.getParameter("btnAgregarCliente") != null) {
     		cargarDesplegables(request);
             RequestDispatcher dispatcher = request.getRequestDispatcher("/AgregarCliente.jsp");
             dispatcher.forward(request, response);
@@ -79,6 +81,7 @@ public class ServletAdminCliente extends HttpServlet {
             request.setAttribute("ClienteDetalle", auxCliente);
             RequestDispatcher dispatcher = request.getRequestDispatcher("/DetalleCliente.jsp");
             dispatcher.forward(request, response);
+            
         }else if (request.getParameter("btnModificar") != null) {
             String dni = request.getParameter("dni");
             Cliente auxCliente = clienteNegocioImpl.get(dni);
@@ -96,9 +99,6 @@ public class ServletAdminCliente extends HttpServlet {
         	RequestDispatcher dispatcher = request.getRequestDispatcher("/ClientesListar.jsp");
         	dispatcher.forward(request, response);
         }    
-    	
-    	
-    	
     }
              
             
@@ -109,7 +109,8 @@ public class ServletAdminCliente extends HttpServlet {
     		RequestDispatcher dispatcher = request.getRequestDispatcher("/Login.jsp");
     		dispatcher.forward(request, response);
     	}
-        if(request.getParameter("btnGuardarCambios") != null) {
+    	
+    	if(request.getParameter("btnGuardarCambios") != null) {
 			try{
 				//String dni = request.getParameter("dni");
 				//Cliente auxCliente = (Cliente)listaClientes1.stream().filter(x -> x.getDni().equals(dni)).findFirst().orElse(null);
@@ -120,7 +121,7 @@ public class ServletAdminCliente extends HttpServlet {
 				if(localidad.getProvincia().getProvinciaId() != provincia.getProvinciaId()){
 					throw new matchLocacionException("La localidad no pertenece a la provincia seleccionada");
 				}
-				String regex = "[a-zA-ZÃ±Ã‘Ã¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“Ãš\\s]+"; //Solo admite caracteres alfabeticos
+				String regex = "[a-zA-ZñÑáéíóúÁÉÍÓÚ\\s]+"; //Solo admite caracteres alfabeticos
 				Pattern pattern = Pattern.compile(regex);
 				Matcher matcher = pattern.matcher(request.getParameter("nombre"));
 				if(!matcher.matches()) {
@@ -165,11 +166,84 @@ public class ServletAdminCliente extends HttpServlet {
 			}        	
          	
          }
-    	
-    	
+    	 else if(request.getParameter("btnAgregarClienteNuevo") != null) { 
+    		       		  
+    		    Provincia auxProv = (Provincia)listaProvincia.stream().filter(x -> x.getProvinciaId() ==  Integer.parseInt(request.getParameter("provincia"))).findFirst().orElse(null);
+    		    Localidad auxLoc = (Localidad)listaLocalidad.stream().filter(x -> x.getLocalidadId() ==  Integer.parseInt(request.getParameter("localidad"))).findFirst().orElse(null);
+   		    
+    		    if(auxProv.getProvinciaId() != auxLoc.getProvincia().getProvinciaId()) {
+	  	        	session.setAttribute("respuesta", "La localidad no pertenece a la provincia seleccionada");
+	  	        	cargarDesplegables(request);
+	  	            RequestDispatcher dispatcher = request.getRequestDispatcher("/AgregarCliente.jsp");
+	  	            dispatcher.forward(request, response);
+    		    }
+    		    else {
+	                String auxDni = request.getParameter("dni");       			
+	                String  auxCuil = request.getParameter("cuil");
+	                String auxEmail = request.getParameter("email"); 
+	                String auxUsuario = request.getParameter("usuario");
+	                
+	                List<Cliente> auxLista = null;
+	                listaClientes1 = clienteNegocioImpl.list();
+	                auxLista = listaClientes1.stream().filter(x -> x.getDni().equals(auxDni) || x.getCuil().equals(auxCuil) || x.getUsuario().getNombreUsuario().equals(auxUsuario) || x.getCorreo().equals(auxEmail)).collect(Collectors.toList());
+	      		  
+	               if(auxLista==null || auxLista.isEmpty()) {
+	      		    
+	      		   int idpais =Integer.parseInt( request.getParameter("nacionalidad1")); 
+	               Pais cpais = paisNegocioImpl.get(idpais);
+	               int idprovincia = Integer.parseInt(request.getParameter("provincia"));
+	   		       Provincia cProvincia = provinciaNegocioImpl.get(idprovincia);
+	               int idlocalidad = Integer.parseInt(request.getParameter("localidad"));
+	               Localidad cLocalidad = localidadNegocioImpl.get(idlocalidad);
+	               cProvincia.setPais(cpais);
+	               cLocalidad.setProvincia(cProvincia);        
+	               String contrasena = request.getParameter("contrasena");
+	               TipoUsuarioNegocioImpl tipoUsuarioNegocioImpl = new TipoUsuarioNegocioImpl();
+	               TipoUsuario tipoUsuario = tipoUsuarioNegocioImpl.get(2); //Valor por cliente       
+	               Usuario newUsuario = new Usuario();
+	               newUsuario.setNombreUsuario(auxUsuario);
+	               newUsuario.setPassword(contrasena);
+	               newUsuario.setTipoUsuario(tipoUsuario);
+	               usuarioNegocioImpl.insert(newUsuario);
+	               int idusuario =usuarioNegocioImpl.list().size();
+	               newUsuario = usuarioNegocioImpl.get(idusuario); 
+	      	       Cliente newCliente = new Cliente(
+	            			auxDni,         			
+	            			auxCuil,
+	            			request.getParameter("nombre"),
+	            			request.getParameter("apellido"),
+	            			request.getParameter("sexo").charAt(0),
+	            			paisNegocioImpl.get(Integer.parseInt(request.getParameter("nacionalidad1"))).getNombre(),
+	            			Date.valueOf(request.getParameter("fechanacimiento")),
+	            			request.getParameter("direccion"),
+	            			cLocalidad,
+	            	     	auxEmail,
+	            			request.getParameter("telefono"),
+	            			newUsuario
+	            	);
+	                 clienteNegocioImpl.insert(newCliente);
+	                 session.setAttribute("respuesta", "El cliente fue agregado exitosamente");
+	                 cargarDesplegables(request);
+	                RequestDispatcher dispatcher = request.getRequestDispatcher("/AgregarCliente.jsp");
+	                dispatcher.forward(request, response);
+	         
+             
+             }else {
+            	session.setAttribute("respuesta", "Error. El cliente ya se encuentra ingresado.");
+            	cargarDesplegables(request);
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/AgregarCliente.jsp");
+                dispatcher.forward(request, response);
+
+           }
+    		    
+    	 } 
+        
+       }
     }
- 
-        private void cargarDesplegables(HttpServletRequest request) {
+    
+    
+    
+    private void cargarDesplegables(HttpServletRequest request) {
     	listaPais = paisNegocioImpl.list();    	
       	request.setAttribute("Lista_Paises", listaPais);
       	listaLocalidad = localidadNegocioImpl.list();
@@ -177,8 +251,5 @@ public class ServletAdminCliente extends HttpServlet {
       	listaProvincia = provinciaNegocioImpl.list();
       	request.setAttribute("Lista_Provincias", listaProvincia);
 	}
-    
-    
-    
 }
 
