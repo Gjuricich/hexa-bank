@@ -109,6 +109,62 @@ public class ServletAdminCliente extends HttpServlet {
     		RequestDispatcher dispatcher = request.getRequestDispatcher("/Login.jsp");
     		dispatcher.forward(request, response);
     	}
+        if(request.getParameter("btnGuardarCambios") != null) {
+			try{
+				//String dni = request.getParameter("dni");
+				//Cliente auxCliente = (Cliente)listaClientes1.stream().filter(x -> x.getDni().equals(dni)).findFirst().orElse(null);
+				
+				Provincia provincia = provinciaNegocioImpl.get(Integer.parseInt(request.getParameter("provincia")));
+				Localidad localidad = localidadNegocioImpl.get(Integer.parseInt(request.getParameter("localidad")));
+
+				if(localidad.getProvincia().getProvinciaId() != provincia.getProvinciaId()){
+					throw new matchLocacionException("La localidad no pertenece a la provincia seleccionada");
+				}
+				String regex = "[a-zA-ZñÑáéíóúÁÉÍÓÚ\\s]+"; //Solo admite caracteres alfabeticos
+				Pattern pattern = Pattern.compile(regex);
+				Matcher matcher = pattern.matcher(request.getParameter("nombre"));
+				if(!matcher.matches()) {
+					throw new NumbersInTextException("El nombre debe contener exclusivamente caracteres alfabeticos");
+				}
+
+				Cliente modCliente = new Cliente(
+            			request.getParameter("dni"),
+            			request.getParameter("cuil"),
+            			request.getParameter("nombre"),
+            			request.getParameter("apellido"),
+            			request.getParameter("sexo").charAt(0),
+            			paisNegocioImpl.get(Integer.parseInt(request.getParameter("nacionalidad"))).getNombre(),
+            			Date.valueOf(request.getParameter("fecha-nacimiento")),
+            			request.getParameter("direccion"),
+            			localidadNegocioImpl.get(Integer.parseInt(request.getParameter("localidad"))),
+            			request.getParameter("Email"),
+            			request.getParameter("telefonos"),
+            			new Usuario()
+            			);
+            	
+        		Boolean cli_modificado = clienteNegocioImpl.update(modCliente);       		
+        		Cliente cliente = clienteNegocioImpl.get(request.getParameter("dni"));
+        		Usuario modUser = usuarioNegocioImpl.get(cliente.getUsuario().getUsuarioId());
+        		modUser.setPassword((String) request.getParameter("contrasena"));
+        		Boolean user_modificado = usuarioNegocioImpl.update(modUser);        		
+        		cliente.setUsuario(modUser);
+        		
+        		if(cli_modificado && user_modificado) {
+        		session.setAttribute("respuesta", "Los cambios se guardaron exitosamente");
+        		listaClientes1 = clienteNegocioImpl.list();
+	            request.setAttribute("Lista_Clientes", listaClientes1);   
+        		 RequestDispatcher dispatcher = request.getRequestDispatcher("/ClientesListar.jsp");
+                dispatcher.forward(request, response);
+        		}
+			}catch(Exception e){
+				session.setAttribute("respuesta", "Error al guardar los cambios: " + e.getMessage());
+				listaClientes1 = clienteNegocioImpl.list();
+	            request.setAttribute("Lista_Clientes", listaClientes1);   
+        		RequestDispatcher dispatcher = request.getRequestDispatcher("/ClientesListar.jsp");
+        		dispatcher.forward(request, response);
+			}        	
+         	
+         }
     	
     	
     }
