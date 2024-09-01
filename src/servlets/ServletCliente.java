@@ -46,6 +46,15 @@ public class ServletCliente extends HttpServlet {
 				dispatcher.forward(request, response);	
 		    }
 
+		if(request.getParameter("btnVerDetalleCuenta")!=null)
+	    {
+			int nroCuenta= Integer.parseInt(request.getParameter("nroCuenta"));
+			Cuenta auxCuenta = cuentasPorCliente.stream().filter(x -> x.getNumeroCuenta() == nroCuenta).findFirst().orElse(null);
+		    request.setAttribute("cuentaDetalle", auxCuenta);
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/DetalleCuenta.jsp");
+			dispatcher.forward(request, response);
+	    }
+		
 		if(request.getParameter("btnMovimientosCuenta")!=null) {
 			int nroCuenta = Integer.parseInt(request.getParameter("nroCuentaDetalle"));
 			ArrayList<Movimiento> movimientos = movimientosNegocioImpl.listByNumeroCuenta(nroCuenta);
@@ -53,9 +62,7 @@ public class ServletCliente extends HttpServlet {
 			RequestDispatcher dispatcher = request.getRequestDispatcher("/ListarMovimientos.jsp");
 			dispatcher.forward(request, response);
 		}
-		
 
-		
 	}
 
 
