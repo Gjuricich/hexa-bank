@@ -45,7 +45,17 @@ public class ServletCliente extends HttpServlet {
 				RequestDispatcher dispatcher = request.getRequestDispatcher("/PerfilCliente.jsp");
 				dispatcher.forward(request, response);	
 		    }
-	
+
+		if(request.getParameter("btnMovimientosCuenta")!=null) {
+			int nroCuenta = Integer.parseInt(request.getParameter("nroCuentaDetalle"));
+			ArrayList<Movimiento> movimientos = movimientosNegocioImpl.listByNumeroCuenta(nroCuenta);
+			request.setAttribute("movimientos", movimientos);
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/ListarMovimientos.jsp");
+			dispatcher.forward(request, response);
+		}
+		
+
+		
 	}
 
 
