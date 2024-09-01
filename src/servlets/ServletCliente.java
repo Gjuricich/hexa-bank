@@ -46,6 +46,24 @@ public class ServletCliente extends HttpServlet {
 				dispatcher.forward(request, response);	
 		    }
 
+		
+		if(request.getParameter("btnCuentas")!=null)
+	    {
+			int cantCuentas = (int) session.getAttribute("cantCuentas");
+			if(cantCuentas !=0) {
+				Cliente cliente = (Cliente)session.getAttribute("cliente");
+				cuentasPorCliente = cuentaNegocioImpl.listCuentasPorCliente(cliente.getDni());
+			    request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente);
+				RequestDispatcher dispatcher = request.getRequestDispatcher("/CuentasClientes.jsp");
+				dispatcher.forward(request, response);				
+			}else {
+				session.setAttribute("respuesta", "No tiene cuentas disponibles para acceder a esta opci�n.");
+				RequestDispatcher dispatcher = request.getRequestDispatcher("/MenuCliente.jsp");
+				dispatcher.forward(request, response);		
+			}
+		
+	    }
+		
 		if(request.getParameter("btnVerDetalleCuenta")!=null)
 	    {
 			int nroCuenta= Integer.parseInt(request.getParameter("nroCuenta"));
@@ -62,7 +80,12 @@ public class ServletCliente extends HttpServlet {
 			RequestDispatcher dispatcher = request.getRequestDispatcher("/ListarMovimientos.jsp");
 			dispatcher.forward(request, response);
 		}
+		
 
+		
+
+		
+		
 	}
 
 
