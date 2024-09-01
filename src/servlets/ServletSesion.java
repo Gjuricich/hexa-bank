@@ -38,6 +38,32 @@ public class ServletSesion extends HttpServlet {
             String nombreUsuario = request.getParameter("username");
             String password = request.getParameter("password");
 
+            if (usuarioNegocioImpl.existeNombreUsuario(nombreUsuario)) {
+                Usuario usuario = usuarioNegocioImpl.buscarUsuario(nombreUsuario);
+
+                if (usuario.getPassword().equals(password)) {
+                	
+                	if(usuario.getTipoUsuario().getTipoUsuario().equals("administrador")) {
+	                    session.setAttribute("tipoUsuario", "admin");
+	                    session.setAttribute("usuario", nombreUsuario);
+	
+	                    RequestDispatcher dispatcher = request.getRequestDispatcher("/MenuAdmin.jsp");
+	                    dispatcher.forward(request, response);
+                	}else {               		
+                		Cliente auxCliente = clienteNegocioImpl.getPorIdUsuario(usuario.getUsuarioId());
+                		session.setAttribute("cliente", auxCliente);
+                        session.setAttribute("tipoUsuario", "cliente");
+                        session.setAttribute("usuario", nombreUsuario);
+                    	
+                        CuentaNegocioImpl cuentaNegocio = new CuentaNegocioImpl();
+            			int cantCuentas = cuentaNegocio.listCuentasPorCliente(auxCliente.getDni()).size();
+            			session.setAttribute("cantCuentas", cantCuentas);
+                        
+                        RequestDispatcher dispatcher = request.getRequestDispatcher("/MenuCliente.jsp");
+	                    dispatcher.forward(request, response);	
+                	}
+                } 
+            } 
         }
 
         if(request.getParameter("btnCerrarSesion") != null) {
