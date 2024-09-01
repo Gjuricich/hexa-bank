@@ -62,8 +62,16 @@ public class ServletSesion extends HttpServlet {
                         RequestDispatcher dispatcher = request.getRequestDispatcher("/MenuCliente.jsp");
 	                    dispatcher.forward(request, response);	
                 	}
-                } 
-            } 
+                } else {
+                    request.setAttribute("errorMessage", "Contrase�a incorrecta.");
+                    RequestDispatcher dispatcher = request.getRequestDispatcher("/Login.jsp");
+                    dispatcher.forward(request, response);
+                }
+            } else {
+                request.setAttribute("errorMessage", "Usuario no encontrado.");
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/Login.jsp");
+                dispatcher.forward(request, response);
+            }
         }
 
         if(request.getParameter("btnCerrarSesion") != null) {
