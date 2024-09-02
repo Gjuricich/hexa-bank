@@ -30,8 +30,9 @@ public class ServletPagoPrestamos extends HttpServlet {
 	private ArrayList<Cuota> listaCuotas = new ArrayList<Cuota>();
 	private CuentaNegocioImpl cuentaNegocioImpl = new CuentaNegocioImpl();
 	private ArrayList<Cuenta> cuentasPorCliente = new ArrayList<Cuenta>();
-	private ArrayList<Prestamo> listaPrestamos= new ArrayList<Prestamo>(); 
-  
+	private ArrayList<Prestamo> listaPrestamos= new ArrayList<Prestamo>();
+
+   
     public ServletPagoPrestamos() {
         super();
       
@@ -43,7 +44,7 @@ public class ServletPagoPrestamos extends HttpServlet {
 			
 			int cantCuentas = (int) session.getAttribute("cantCuentas");
 			if(cantCuentas !=0) {
-
+				cargarPrestamos(request);
 				RequestDispatcher dispatcher = request.getRequestDispatcher("/PagoPrestamosCliente.jsp");
 				dispatcher.forward(request, response);	
 			}else {
@@ -59,5 +60,16 @@ public class ServletPagoPrestamos extends HttpServlet {
 		
 	}
 	
+    private void cargarPrestamos(HttpServletRequest request) {
+		HttpSession session = request.getSession();  
+		Cliente cliente = (Cliente)session.getAttribute("cliente");
+		cuentasPorCliente = cuentaNegocioImpl.listCuentasPorCliente(cliente.getDni());
+		request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente);
+    	listaPrestamos = prestamoNegocioImpl.listIdPrestamosPorCliente(cliente.getDni());		
+		if(listaPrestamos.isEmpty() || listaPrestamos == null) {
+			listaPrestamos = null;
+		}
+		request.setAttribute("listaPrestamos", listaPrestamos);
+	}
 
 }
