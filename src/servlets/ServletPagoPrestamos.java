@@ -22,6 +22,7 @@ import negocioImpl.CuentaNegocioImpl;
 import negocioImpl.CuotaNegocioImpl;
 import negocioImpl.PrestamoNegocioImpl;
 
+
 @WebServlet("/ServletPagoPrestamos")
 public class ServletPagoPrestamos extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -32,7 +33,6 @@ public class ServletPagoPrestamos extends HttpServlet {
 	private ArrayList<Cuenta> cuentasPorCliente = new ArrayList<Cuenta>();
 	private ArrayList<Prestamo> listaPrestamos= new ArrayList<Prestamo>();
 
-   
     public ServletPagoPrestamos() {
         super();
       
@@ -57,7 +57,38 @@ public class ServletPagoPrestamos extends HttpServlet {
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
+		HttpSession session = request.getSession();  		   
+		if(request.getParameter("btnPagarCuota") != null) {
+			try {
+				int cuotaId = Integer.parseInt(request.getParameter("idCuota"));
+				int nroCuota = Integer.parseInt(request.getParameter("nroCuota"));
+				String nroCuenta = request.getParameter("CuentaOrigen");
+				int prestamoId =  Integer.parseInt(request.getParameter("prestamoId"));
+				int pagada = cuotaNegocioImpl.update(cuotaId, nroCuenta);
+				
+				if(pagada == 0) {
+					session.setAttribute("respuesta", "Cuota pagada con éxito");
+					
+				} else {
+					if(pagada == 45000) {
+						throw new sqlPagoPrestamosException("Error: " + String.valueOf(pagada) + ", saldo insuficiente para pagar la cuota.");
+					}else {
+						throw new Exception("Error: " + String.valueOf(pagada) + ", no fue posible pagar la cuota.");
+					}
+					
+				}
+				
+				cargarPrestamos(request);
+				RequestDispatcher dispatcher = request.getRequestDispatcher("/PagoPrestamosCliente.jsp");
+				dispatcher.forward(request, response);
+				
+			}catch(Exception e) {
+				session.setAttribute("respuesta", e.getMessage());
+				cargarPrestamos(request);
+				RequestDispatcher dispatcher = request.getRequestDispatcher("/PagoPrestamosCliente.jsp");
+				dispatcher.forward(request, response);
+			}
+	     }
 	}
 	
     private void cargarPrestamos(HttpServletRequest request) {
