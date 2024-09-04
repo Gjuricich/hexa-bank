@@ -70,8 +70,8 @@ public class ServletTransferenciasCliente extends HttpServlet {
      protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     	 HttpSession session = request.getSession(); 
 		 Cliente cliente = (Cliente)session.getAttribute("cliente");
-
-         if(request.getParameter("btnTransferir")!=null)
+		  
+ 		if(request.getParameter("btnTransferir")!=null)
  	    {	    		
  			if(!transferirMismaCuenta(request)){
  			String cbuOrigen = request.getParameter("CuentaOrigen");
@@ -92,7 +92,8 @@ public class ServletTransferenciasCliente extends HttpServlet {
  			RequestDispatcher dispatcher = request.getRequestDispatcher("/TransferenciasCP.jsp");
  			dispatcher.forward(request, response);
  	    }
-            if(request.getParameter("btnTransferir2")!=null) 
+ 		
+ 		if(request.getParameter("btnTransferir2")!=null) 
  		{   
  		    if(!cbuDestinoValido(request) && !transferirMismaCuenta(request)){
  	 	    String cbuOrigen = request.getParameter("CuentaOrigen");
@@ -113,22 +114,17 @@ public class ServletTransferenciasCliente extends HttpServlet {
  			RequestDispatcher dispatcher = request.getRequestDispatcher("/TransferenciasCDT.jsp");
  			dispatcher.forward(request, response);
  		}
-
-          
- 		
-	
          
 	 
          
     }
-
+     
      
      private void cargarCuentas(HttpServletRequest request, Cliente cliente) {
     	    cuentasPorCliente  = cuentaNegocioImpl.listCuentasPorCliente(cliente.getDni());
     	    request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente );
     	}
      
-
      private boolean cbuDestinoValido(HttpServletRequest request) {
   	    HttpSession session = request.getSession();
  	    String cbuDestino = request.getParameter("CuentaDestino");
@@ -139,11 +135,25 @@ public class ServletTransferenciasCliente extends HttpServlet {
   	    }
   	    else {
   	    	return false;
-  	    
+  	    }
+    }
      
      
-  
-   
+     
+     
+     private boolean transferirMismaCuenta(HttpServletRequest request) {
+ 	    HttpSession session = request.getSession();
+		String cbuOrigen = request.getParameter("CuentaOrigen");
+	    String cbuDestino = request.getParameter("CuentaDestino");
+
+ 	    if (cbuOrigen.equals(cbuDestino)) {
+ 	        session.setAttribute("respuesta", "Error al transferir. La cuenta origen es igual a la cuenta de destino.");
+ 	        return true;
+ 	    }
+ 	    else {
+ 	    	return false;
+ 	    }
+ 	}
 
 
 
