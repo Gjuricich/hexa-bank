@@ -69,12 +69,12 @@ if (session != null && session.getAttribute("usuario") != null && session.getAtt
                         <button type="submit" name="btnAdminClientes" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Administrar Clientes</button>
                     </div>
                     </form>
-                     <form action="ServletAdminCuentas" method="get"> 
+                    	<form action="ServletAdminCuentas" method="get">
+                    <div>
+                        <button type="submit" name="btnAgregarCuenta" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Agregar Cuenta</button>
+                    </div>
                     <div>
                         <button type="submit" name="btnAdminCuentas" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Administrar Cuentas</button>
-                    </div>
-                      <div>
-                        <button type="submit" name="btnAgregarCuenta" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Agregar Cuenta</button>
                     </div>
                     </form>
                      <form action="ServletAdminPrestamos" method="get"> 
@@ -82,8 +82,8 @@ if (session != null && session.getAttribute("usuario") != null && session.getAtt
                         <button type="submit" name="btnPrestamos" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Préstamos</button>
                     </div>
                     </form>
-                     <form action="ServletReportes" method="get"> 
-                     <div>
+                    	<form action="ServletReportes" method="get"> 
+                    <div>
                         <button type="submit" name="btnReportes" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Reportes</button>
                     </div>  
                     </form>                
