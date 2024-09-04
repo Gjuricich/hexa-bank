@@ -70,90 +70,16 @@ public class ServletTransferenciasCliente extends HttpServlet {
      protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     	 HttpSession session = request.getSession(); 
 		 Cliente cliente = (Cliente)session.getAttribute("cliente");
-		  
- 		if(request.getParameter("btnTransferir")!=null)
- 	    {	    		
- 			if(!transferirMismaCuenta(request)){
- 			String cbuOrigen = request.getParameter("CuentaOrigen");
- 			String cbuDestino = request.getParameter("CuentaDestino");
- 			String detalle =request.getParameter("detalleTransferencia");
- 			String aux = request.getParameter("importe");
-	        BigDecimal importe = new BigDecimal(aux);
-	        Boolean inserto=tNegocio.insert(cbuOrigen, cbuDestino,detalle,importe);
-		        if(inserto) {
-		        	
-		        	session.setAttribute("respuesta", "Transferencia exitosa");
-		        }
-		        else {
-		        	session.setAttribute("respuesta", "Error. La transferencia no pudo realizarse. Saldo insuficiente en la cuenta de origen.");
-		        }
- 			}
-	        cargarCuentas(request,cliente);
- 			RequestDispatcher dispatcher = request.getRequestDispatcher("/TransferenciasCP.jsp");
- 			dispatcher.forward(request, response);
- 	    }
- 		
- 		if(request.getParameter("btnTransferir2")!=null) 
- 		{   
- 		    if(!cbuDestinoValido(request) && !transferirMismaCuenta(request)){
- 	 	    String cbuOrigen = request.getParameter("CuentaOrigen");
- 	 	    String cbuDestino = request.getParameter("CuentaDestino");
- 			String detalle =request.getParameter("detalleTransferencia2");
- 			String aux = request.getParameter("importe");
-	        BigDecimal importe = new BigDecimal(aux);
-	        Boolean inserto=tNegocio.insert(cbuOrigen, cbuDestino,detalle,importe);
-		        if(inserto) {
-		        	
-		        	session.setAttribute("respuesta", "Transferencia exitosa");
-		        }
-		        else {
-		        	session.setAttribute("respuesta", "Error. La transferencia no pudo realizarse. Saldo insuficiente en la cuenta de origen.");
-		        }
-	        }
-	        cargarCuentas(request,cliente);
- 			RequestDispatcher dispatcher = request.getRequestDispatcher("/TransferenciasCDT.jsp");
- 			dispatcher.forward(request, response);
- 		}
+	
          
 	 
          
     }
      
      
-     private void cargarCuentas(HttpServletRequest request, Cliente cliente) {
-    	    cuentasPorCliente  = cuentaNegocioImpl.listCuentasPorCliente(cliente.getDni());
-    	    request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente );
-    	}
      
-     private boolean cbuDestinoValido(HttpServletRequest request) {
-  	    HttpSession session = request.getSession();
- 	    String cbuDestino = request.getParameter("CuentaDestino");
-
-  	    if (cbuDestino.length() != 22) {
-  	        session.setAttribute("respuesta", "Error al transferir. El Cbu de Destino debe contener 22 números.");
-  	        return true;
-  	    }
-  	    else {
-  	    	return false;
-  	    }
-    }
-     
-     
-     
-     
-     private boolean transferirMismaCuenta(HttpServletRequest request) {
- 	    HttpSession session = request.getSession();
-		String cbuOrigen = request.getParameter("CuentaOrigen");
-	    String cbuDestino = request.getParameter("CuentaDestino");
-
- 	    if (cbuOrigen.equals(cbuDestino)) {
- 	        session.setAttribute("respuesta", "Error al transferir. La cuenta origen es igual a la cuenta de destino.");
- 	        return true;
- 	    }
- 	    else {
- 	    	return false;
- 	    }
- 	}
+  
+   
 
 
 
