@@ -92,6 +92,27 @@ public class ServletTransferenciasCliente extends HttpServlet {
  			RequestDispatcher dispatcher = request.getRequestDispatcher("/TransferenciasCP.jsp");
  			dispatcher.forward(request, response);
  	    }
+            if(request.getParameter("btnTransferir2")!=null) 
+ 		{   
+ 		    if(!cbuDestinoValido(request) && !transferirMismaCuenta(request)){
+ 	 	    String cbuOrigen = request.getParameter("CuentaOrigen");
+ 	 	    String cbuDestino = request.getParameter("CuentaDestino");
+ 			String detalle =request.getParameter("detalleTransferencia2");
+ 			String aux = request.getParameter("importe");
+	        BigDecimal importe = new BigDecimal(aux);
+	        Boolean inserto=tNegocio.insert(cbuOrigen, cbuDestino,detalle,importe);
+		        if(inserto) {
+		        	
+		        	session.setAttribute("respuesta", "Transferencia exitosa");
+		        }
+		        else {
+		        	session.setAttribute("respuesta", "Error. La transferencia no pudo realizarse. Saldo insuficiente en la cuenta de origen.");
+		        }
+	        }
+	        cargarCuentas(request,cliente);
+ 			RequestDispatcher dispatcher = request.getRequestDispatcher("/TransferenciasCDT.jsp");
+ 			dispatcher.forward(request, response);
+ 		}
  		
 	
          
