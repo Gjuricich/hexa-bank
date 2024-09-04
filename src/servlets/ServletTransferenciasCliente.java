@@ -113,6 +113,8 @@ public class ServletTransferenciasCliente extends HttpServlet {
  			RequestDispatcher dispatcher = request.getRequestDispatcher("/TransferenciasCDT.jsp");
  			dispatcher.forward(request, response);
  		}
+
+          
  		
 	
          
@@ -126,6 +128,18 @@ public class ServletTransferenciasCliente extends HttpServlet {
     	    request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente );
     	}
      
+
+     private boolean cbuDestinoValido(HttpServletRequest request) {
+  	    HttpSession session = request.getSession();
+ 	    String cbuDestino = request.getParameter("CuentaDestino");
+
+  	    if (cbuDestino.length() != 22) {
+  	        session.setAttribute("respuesta", "Error al transferir. El Cbu de Destino debe contener 22 números.");
+  	        return true;
+  	    }
+  	    else {
+  	    	return false;
+  	    
      
      
   
