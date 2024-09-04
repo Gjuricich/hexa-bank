@@ -119,6 +119,12 @@ public class ServletTransferenciasCliente extends HttpServlet {
 	 
          
     }
+
+     
+     private void cargarCuentas(HttpServletRequest request, Cliente cliente) {
+    	    cuentasPorCliente  = cuentaNegocioImpl.listCuentasPorCliente(cliente.getDni());
+    	    request.setAttribute("Lista_Cuentas_cliente", cuentasPorCliente );
+    	}
      
      
      
