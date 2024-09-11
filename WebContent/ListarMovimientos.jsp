@@ -1,4 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="entidad.Movimiento" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,46 +14,57 @@
 </head>
 <body>
 
+<%
+            ArrayList<Movimiento> movimientos = new ArrayList<Movimiento>();  
+ 			movimientos = (ArrayList<Movimiento>) request.getAttribute("movimientos");
+%>
+
 	<jsp:include page="NavBar.jsp" />
 	<div class="bg-white pt-24">
 	
-	<div class="container mx-auto px-4 py-8" style="width: 80%; overflow-y: auto;  min-height: 600px;">
-	      
-	    <h2 class="sm:text-3xl text-2xl font-medium title-font mb-2 text-gray-900" style="margin-top:3%;">Historial de Movimientos: N° 55562</h2>
-	        <br>
-	         <br>
-	    <table id="tablaCuentas" class="display compact">
+		<div class="container mx-auto px-4 py-8" style="width: 80%; overflow-y: auto;  min-height: 600px;">
+		      
+		    <h2 class="sm:text-3xl text-2xl font-medium title-font mb-2 text-gray-900" style="margin-top:3%;">Historial de Movimientos: N°  <%= movimientos.get(0).getCuenta().getNumeroCuenta()%></h2>
+		        <br>
+		         <br>
+		    <table id="tablaCuentas" class="display compact">
+		
+		        <thead>
+		            <tr>  
+		                <th>Fecha</th>
+		                <th>Tipo de Movimiento</th>
+		                <th>Concepto</th>
+		                <th>Importe</th>	               
+		            </tr>
+		        </thead>
+		        <tbody>
+		        <% if(movimientos.isEmpty()){ %>
+		        	<p>No hay movimientos para esta cuenta</p>
+		        <%}else{ %>
+		        	<% for(Movimiento movimiento : movimientos){ %>
+			        	<tr>
+			                <td><%= movimiento.getFecha() %></td>
+			                <td><%= movimiento.getTipoMovimiento() %></td>
+			                <td><%= movimiento.getDetalle() %></td>
+			                <td>$<%= movimiento.getImporte() %></td>             
+			            </tr>
+		        	<%} %>
+		        <%} %>
 	
-	        <thead>
-	            <tr>  
-	                <th>Fecha</th>
-	                <th>Tipo de Movimiento</th>
-	                <th>Concepto</th>
-	                <th>Importe</th>	               
-	            </tr>
-	        </thead>
-	        <tbody>
-	            <tr>
-	                <td>23/08/2022</td>
-	                <td>Alta de un préstamo</td>
-	                <td>Acreditación de préstamo</td>
-	                <td>$500000</td>             
-	            </tr>
-	        </tbody>
-	        
-	    </table>
-	    
-	       <div class="flex justify-end mt-4">
-                <button onclick="history.back()" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Atrás</button>
-           </div>
-	</div>
-	
-	<script>
-	$(document).ready(function() {
-	    $('#tablaCuentas').DataTable();
-	});
-	</script>
-	
+		        </tbody>
+		        
+		    </table>
+		             <br>
+		          <div class="flex justify-end w-full mt-4">
+                        <a href="MenuCliente.jsp" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Volver al menú</a>
+                   </div>
+		</div>
+		
+		<script>
+		$(document).ready(function() {
+		    $('#tablaCuentas').DataTable();
+		});
+		</script>
 	
 	</div>
 	

@@ -6,17 +6,22 @@
 <%@ page import="entidad.Pais" %>
 <%       
 
-  Cliente auxCliente = new Cliente();  
-          auxCliente = (Cliente) request.getAttribute("ClienteDetalle");
-          ArrayList<Localidad> localidades = new ArrayList<Localidad>();
-          ArrayList<Provincia> provincias = new ArrayList<Provincia>();
-          ArrayList<Pais> paises = new ArrayList<Pais>();
-          localidades = (ArrayList<Localidad>) request.getAttribute("localidades");
-          provincias = (ArrayList<Provincia>) request.getAttribute("provincias");
-          paises = (ArrayList<Pais>) request.getAttribute("paises");
-          System.out.println(auxCliente.getLocalidad().getProvincia().getPais().getNombre());
-         
+       Cliente auxCliente =  (Cliente) request.getAttribute("ClienteDetalle");
+       ArrayList<Localidad> localidades =(ArrayList<Localidad>) request.getAttribute("Lista_Localidades");
+       ArrayList<Provincia> provincias =  (ArrayList<Provincia>) request.getAttribute("Lista_Provincias");
+       ArrayList<Pais> paises = (ArrayList<Pais>) request.getAttribute("Lista_Paises");
+       String respuesta = null;
+	   if(session != null && session.getAttribute("respuesta") != null){
+	   respuesta = (String)session.getAttribute("respuesta");
+	   session.removeAttribute("respuesta");
+	   %>
+	   <script> 
+	   	 alert('<%= respuesta%>');
+	   </script>   
+	   <%
+	   respuesta = null;}
 %>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -141,11 +146,11 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">Nombre:</label>
-                    <input  required type="text" id="nombre" name="nombre" maxlength="100" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getNombre() %>"  >
+                    <input required type="text" id="nombre" name="nombre" maxlength="100" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getNombre() %>"  >
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="apellido">Apellido:</label>
-                    <input  required type="text" id="apellido" maxlength="100" name="apellido" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getApellido() %>"  >
+                    <input required type="text" id="apellido" maxlength="100" name="apellido" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getApellido() %>"  >
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="dni">DNI:</label>
@@ -175,7 +180,7 @@
                     <div class="relative">
                         <select id="nacionalidad" name="nacionalidad" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                             <% for (Pais pais: paises){ %>
-								<% if (pais.getPaisId() ==  auxCliente.getLocalidad().getProvincia().getPais().getPaisId()){%>
+								<% if (pais.getNombre().equals(auxCliente.getNacionalidad())){%>
                             		 <option selected value=<%= pais.getPaisId() %>><%= pais.getNombre() %></option> 
                             	<% } else { %>
                             		 <option value=<%= pais.getPaisId() %>><%= pais.getNombre() %></option>                       	
@@ -189,7 +194,7 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-nacimiento">Fecha de Nacimiento:</label>
-                    <input required type="date" max="2006-01-01" id="fecha-nacimiento" name="fecha-nacimiento" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getFechaNacimiento()%>"  >
+                    <input required type="date" max="2006-01-01" min="1930-01-01" id="fecha-nacimiento" name="fecha-nacimiento" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getFechaNacimiento()%>"  >
                 </div>              
                 <div class="col-span-1 md:col-span-2 border-b pb-4 mt-4">
                     <h3 class="text-lg font-medium title-font mb-2 text-gray-700">Datos de Contacto</h3>
@@ -249,11 +254,11 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="contrasena">Contraseña:</label>
-                    <input required type="password" id="contrasena" name="contrasena" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getUsuario().getPassword()%>"  >
+                    <input required type="password" maxlength="15"  minlength="8" id="contrasena" name="contrasena" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getUsuario().getPassword()%>"  >
                 </div>  
                 <div class="mb-4">
                       <label class="block text-gray-700 text-sm font-bold mb-2" for="ConfirmarContrasena">Confirmar contraseña:</label>
-                      <input required type="password" id="ConfirmarContrasena" name="ConfirmarContrasena" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required value="<%=auxCliente.getUsuario().getPassword()%>" >
+                      <input required type="password" maxlength="15"  minlength="8" id="ConfirmarContrasena" name="ConfirmarContrasena" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required value="<%=auxCliente.getUsuario().getPassword()%>" >
                 </div>         
             </div>           
 			<div class="mb-4">
@@ -263,10 +268,10 @@
           
            </div>
            </form>
-    
-         <div class="flex justify-end w-full mt-4">
-                <button onclick="history.back()" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Atrás</button>
-         </div>
+              <br>
+           <div class="flex justify-end w-full mt-4">
+                        <a href="MenuAdmin.jsp" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Volver al menú</a>
+                    </div>
     </div>
 </div>
 

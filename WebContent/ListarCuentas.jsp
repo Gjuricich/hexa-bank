@@ -1,4 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="entidad.Cuenta" %>
+<%@ page import="java.text.DecimalFormat" %>
+<%@ page import="javax.servlet.http.HttpSession" %>
+<%
+	ArrayList<Cuenta> listaCuentas = new ArrayList<Cuenta>();  
+	listaCuentas = (ArrayList<Cuenta>) request.getAttribute("Lista_Cuentas");
+	DecimalFormat formato = new DecimalFormat("#0.00");
+	String saldoFormateado;  
+%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,6 +21,20 @@
     <link rel="icon" type="image/png" href="Images/logo.png">
 </head>
 <body>
+
+	<jsp:include page="NavBar.jsp" />
+        <%   
+	  String respuesta = null;
+	    if(session != null && session.getAttribute("respuesta") != null){
+	    respuesta = (String)session.getAttribute("respuesta");
+	    session.removeAttribute("respuesta");
+	     %>
+	    <script> 
+	        alert('<%= respuesta%>');
+	    </script>   
+	    <%
+	    respuesta = null;}
+    %>
 
 	<jsp:include page="NavBar.jsp" />
 	<div class="bg-white pt-24">
@@ -35,26 +59,57 @@
 	            </tr>
 	        </thead>
 	        <tbody>
-	            <tr>
-	                <td>Lionel Messi</td>
-	                <td>20/06/2023</td>
-	                <td>Caja de ahorro</td>
-	                <td>56482</td>
-	                <td>3624589214752658</td>
-	                <td>$10000</td>
-	                <td><button type="submit" name="btnModificar" class="flex mx-auto mt-6 text-white bg-purple-500 border-0 py-2 px-5 focus:outline-none hover:bg-purple-600 rounded">Modificar</button>
-	                </td>
-	                <td><button type="submit" name="btnEliminar" class="flex mx-auto mt-6 text-white bg-red-500 border-0 py-2 px-5 focus:outline-none hover:bg-red-600 rounded">Eliminar</button>
-	                </td>
-	            </tr>
+	             <% if (listaCuentas != null && !listaCuentas.isEmpty()) { %>
+                            <% for (Cuenta cuenta : listaCuentas) { 
+                                    saldoFormateado = formato.format(cuenta.getSaldo()); %>
+                                <tr>
+                                    <td style="text-align: center"><%= cuenta.getCliente().getNombre() %> <%= cuenta.getCliente().getApellido() %></td>
+                                    <td style="text-align: center"><%= cuenta.getFechaCreacion() %></td>
+                                    <td style="text-align: center"><%= cuenta.getTipoCuenta() %></td>
+                                    <td style="text-align: center"><%= cuenta.getNumeroCuenta() %></td>
+                                    <td style="text-align: center"><%= cuenta.getCbu() %></td> 
+                                    <td style="text-align: center"> $<%= saldoFormateado %></td>                                                        
+                                    <td>
+                                    <form action="ServletAdminCuentas" method="get">     
+                                        <input type="hidden" name="nroCuenta" value="<%= cuenta.getNumeroCuenta() %>">   
+                                        <button type="submit" name="btnModificar" value="modificar" class="flex mx-auto mt-6 text-white bg-purple-500 border-0 py-2 px-5 focus:outline-none hover:bg-purple-600 rounded">Modificar</button>
+                                   </form >
+                                   </td>
+                                   <td> 
+                                   <form action="ServletAdminCuentas" method="get" onsubmit="return confirmacion();">
+                                        <input type="hidden" name="nroCuenta" value="<%= cuenta.getNumeroCuenta() %>">
+                                        <button type="submit" name="btnEliminar" value="eliminar" class="flex mx-auto mt-6 text-white bg-red-500 border-0 py-2 px-5 focus:outline-none hover:bg-red-600 rounded">Eliminar</button>
+                                   </form >     
+                                   </td>
+                                </tr>
+                            <% } %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="8" style="text-align: center">No hay cuentas disponibles</td>
+                            </tr>
+                        <% } %>
 	        </tbody>
 	    </table>
+	       <br>
+	            <div class="flex justify-end w-full mt-4">
+                        <a href="MenuAdmin.jsp" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Volver al menú</a>
+                    </div>
 	</div>
 	
 	<script>
 	$(document).ready(function() {
 	    $('#tablaCuentas').DataTable();
 	});
+	
+	   function confirmacion() {  
+	        return confirm('¿Desea eliminar la cuenta?'); 
+	        if (confirmacion) {
+	            return true; 
+	        } else {
+	            return false; 
+	        }
+	    }
+	    
 	</script>
 	
 	</div>

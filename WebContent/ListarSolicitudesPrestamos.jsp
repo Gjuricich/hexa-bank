@@ -1,4 +1,21 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="entidad.Prestamo" %>
+<%@ page import="entidad.TipoPrestamo" %>
+<%@ page import="entidad.Cliente" %>
+ <%
+       String respuesta = null;
+	   if(session != null && session.getAttribute("respuesta") != null){
+	   respuesta = (String)session.getAttribute("respuesta");
+	   session.removeAttribute("respuesta");
+	   %>
+	   <script> 
+	   	 alert('<%= respuesta%>');
+	   </script>   
+	   <%
+	   respuesta = null;}
+%>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,7 +36,7 @@
 	      
 	    <h2 class="sm:text-3xl text-2xl font-medium title-font mb-2 text-gray-900" style="margin-top:3%;">Autorización de Préstamos</h2>
 	        <br>
-	         <br>
+	        <br>
 	    <table id="tablaPrestamos" class="display compact">
 	
 	        <thead>
@@ -28,7 +45,6 @@
 	                <th>Cliente</th>
 	                <th>Importe Solicitado</th>
                     <th>Cant. Cuotas</th>
-	                <th>Interés Mensual</th>
 	                <th>Cuotas</th>
 	                <th>Fecha</th>
 	                <th>Autorizar</th>
@@ -36,30 +52,61 @@
 	            </tr>
 	        </thead>
 	        <tbody>
-	            <tr>
-	                <td>1523</td>
-	                <td>Lionel Messi</td>	             
-	                <td>$600000</td>
-	                <td>12</td>
-	                <td>30%</td>
-	                <td>$65000</td>
-	                <td>20/06/2023</td>
-	                <td><button type="submit" name="btnAutorizar" class="flex mx-auto mt-6 text-white bg-green-500 border-0 py-2 px-5 focus:outline-none hover:bg-green-600 rounded">Autorizar</button>
-	                </td>
-	                <td><button type="submit" name="btnRechazar" class="flex mx-auto mt-6 text-white bg-red-500 border-0 py-2 px-5 focus:outline-none hover:bg-red-600 rounded">Rechazar</button>
-	                </td>
-	            </tr>
+	            <% if (request.getAttribute("Lista_Prestamos") != null) {
+               ArrayList<Prestamo> listaPrestamos = (ArrayList<Prestamo>) request.getAttribute("Lista_Prestamos");
+               for (Prestamo prestamo : listaPrestamos) { %>
+                   <tr>
+                       <td style="text-align: center"><%= prestamo.getPrestamoId() %></td>
+                       <td style="text-align: center"><%= prestamo.getCliente().getNombre() %> <%= prestamo.getCliente().getApellido() %></td>
+                       <td style="text-align: center">$<%= prestamo.getTipoPrestamo().getImporteTotal().toString() %></td>
+                       <td style="text-align: center"><%= prestamo.getTipoPrestamo().getNroCuotas() %></td>
+                       <td style="text-align: center">$<%= prestamo.getTipoPrestamo().getCuotaMensual().toString() %></td>
+                       <td style="text-align: center"><%= prestamo.getFecha().toString() %></td>
+                       <td style="text-align: center">
+                           <form action="ServletAdminPrestamos" method="post" onsubmit="return confirmacion('autorizar');">
+                               <input type="hidden" name="numeroPrestamo" value="<%= prestamo.getPrestamoId() %>">
+                               <input type="hidden" name="cuentaDestino" value="<%= prestamo.getCuenta().getNumeroCuenta() %>">
+                               <button type="submit" name="btnAutorizar" class="flex mx-auto mt-6 text-white bg-purple-500 border-0 py-2 px-5 focus:outline-none hover:bg-purple-600 rounded">Autorizar</button>
+                           </form>
+                       </td>
+                       <td>
+                           <form action="ServletAdminPrestamos" method="post" onsubmit="return confirmacion('rechazar');">
+                               <input type="hidden" name="numeroPrestamo" value="<%= prestamo.getPrestamoId() %>">
+                               <button type="submit" name="btnRechazar" class="flex mx-auto mt-6 text-white bg-red-500 border-0 py-2 px-5 focus:outline-none hover:bg-red-600 rounded">Rechazar</button>
+                           </form>
+                       </td>
+                   </tr>
+        <%     }
+             } else { %>
+                 <tr>
+                     <td colspan="9" style="text-align: center">No hay solicitudes de préstamos disponibles</td>
+                 </tr>
+        <%   } %>
 	        </tbody>
 	    </table>
+	          <br>
+	        <div class="flex justify-end w-full mt-4">
+                        <a href="MenuAdmin.jsp" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Volver al menú</a>
+                    </div>
 	</div>
 	
 	<script>
 	$(document).ready(function() {
 	    $('#tablaPrestamos').DataTable();
 	});
+	
+	   function confirmacion(text) {  
+	        return confirm('¿Esta seguro que desea ' + text + ' el préstamo?'); 
+	        if (confirmacion) {
+	            return true; 
+	        } else {
+	            return false; 
+	        }
+	    }
 	</script>
 	
 	</div>
+
 	
 	<jsp:include page="Footer.jsp" />
 

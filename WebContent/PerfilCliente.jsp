@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="entidad.Cliente" %>
 <%
  String usuario = null;
  String tipoUsuario = null;
@@ -7,6 +8,11 @@ if (session != null && session.getAttribute("usuario") != null && session.getAtt
 	tipoUsuario = (String) session.getAttribute("tipoUsuario");
 }
 %>
+<%
+		  Cliente auxCliente = new Cliente();  
+          auxCliente = (Cliente) request.getAttribute("Cliente_Perfil");
+%>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -45,66 +51,67 @@ if (session != null && session.getAttribute("usuario") != null && session.getAtt
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">Nombre:</label>
-                    <input type="text" id="nombre" name="nombre" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="Lionel" readonly>
+                    <input type="text" id="nombre" name="nombre" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%= auxCliente.getNombre()%>" readonly>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="apellido">Apellido:</label>
-                    <input type="text" id="apellido" name="apellido" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="Messi" readonly>
+                    <input type="text" id="apellido" name="apellido" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%= auxCliente.getApellido()%>" readonly>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="dni">DNI:</label>
-                    <input type="text" id="dni" name="dni" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="25693692" readonly>
+                    <input type="text" id="dni" name="dni" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getDni()%>" readonly>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="cuil">CUIL:</label>
-                    <input type="text" id="cuil" name="cuil" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="20-25693692-5" readonly>
+                    <input type="text" id="cuil" name="cuil" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getCuil()%>" readonly>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="sexo">Sexo:</label>
-                    <input type="text" id="sexo" name="sexo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="M" readonly>
+                    <input type="text" id="sexo" name="sexo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getSexo()%>" readonly>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="nacionalidad">Nacionalidad:</label>
-                    <input type="text" id="nacionalidad" name="nacionalidad" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="Argentino" readonly>
+                    <input type="text" id="nacionalidad" name="nacionalidad" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getNacionalidad()%>" readonly>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-nacimiento">Fecha de Nacimiento:</label>
-                    <input type="text" id="fecha-nacimiento" name="fecha-nacimiento" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="24/06/1987" readonly>
+                    <input type="text" id="fecha-nacimiento" name="fecha-nacimiento" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getFechaNacimiento()%>" readonly>
                 </div>              
                 <div class="col-span-1 md:col-span-2 border-b pb-4 mt-4">
                     <h3 class="text-lg font-medium title-font mb-2 text-gray-700">Datos de Contacto</h3>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">Dirección:</label>
-                    <input type="text" id="direccion" name="direccion" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="Calle 4654" readonly>
+                    <input type="text" id="direccion" name="direccion" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getDireccion()%>" readonly>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="localidad">Localidad:</label>
-                    <input type="text" id="localidad" name="localidad" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="Rosario" readonly>
+                    <input type="text" id="localidad" name="localidad" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getLocalidad().getNombre()%>" readonly>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="provincia">Provincia:</label>
-                    <input type="text" id="provincia" name="provincia" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="Santa Fe" readonly>
+                    <input type="text" id="provincia" name="provincia" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getLocalidad().getProvincia().getNombre()%>" readonly>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="telefonos">Teléfono:</label>
-                    <input type="text" id="telefonos" name="telefonos" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="123456789" readonly>
-                </div>     
-                 <div class="mb-4">
+                    <input type="text" id="telefonos" name="telefonos" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getTelefono()%>" readonly>
+                </div> 
+                <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="telefonos">Email:</label>
-                    <input type="Email" id="Email" name="Email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="lmessi@gmail.com" readonly>
-                </div>     
-            </div>           
-           </div>
-        </form>
+                    <input type="Email" id="Email" name="Email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="<%=auxCliente.getCorreo()%>" readonly>
+                </div>
+            </div>  
+         </form>  
+                <br>
+             <div class="flex justify-end w-full mt-4">
+                     <a href="MenuCliente.jsp" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Volver al menú</a>
+              </div>     
+       </div>
     </div>
+    
 </div>
-
-
     <div class="w-1/12 bgRight"></div>
 </div>
 <jsp:include page="Footer.jsp" />
-     
-
 </body>
 </html>

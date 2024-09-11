@@ -38,6 +38,18 @@ if (session != null && session.getAttribute("usuario") != null && session.getAtt
 <body>
 
     <jsp:include page="NavBar.jsp" />
+          <%   
+	  String respuesta = null;
+	    if(session != null && session.getAttribute("respuesta") != null){
+	    respuesta = (String)session.getAttribute("respuesta");
+	    session.removeAttribute("respuesta");
+	     %>
+	    <script> 
+	        alert('<%= respuesta%>');
+	    </script>   
+	    <%
+	    respuesta = null;}
+    %>
     
     
  <div class="bg-white pt-23">
@@ -53,7 +65,7 @@ if (session != null && session.getAttribute("usuario") != null && session.getAtt
                  <p class="leading-relaxed mt-4 text-center">Bienvenido/a al menú clientes de HexaBank</p>
                  <br>
                 <div class="button-container space-y-4">
-                    <form action="ServletAdminCliente" method="get"> 
+                    <form action="ServletCliente" method="get"> 
                     <div>
                         <button type="submit" name="btnPerfil" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg"">Perfil</button>
                     </div>
@@ -61,17 +73,23 @@ if (session != null && session.getAttribute("usuario") != null && session.getAtt
                         <button type="submit" name="btnCuentas" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Cuentas</button>
                     </div>
                      </form>
-                    <form action="ServletAdminCuentas" method="get"> 
+                    <form action="ServletTransferenciasCliente" method="get"> 
                     <div>
                         <button type="submit" name="btnTransferencias" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg"">Transferencias</button>
                     </div>
+                    </form>
+                    
+                     <form action="ServletAdminPrestamos" method="get">
                     <div>
-                        <button type="submit" name="btnSolicitarPrestamo" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Solicitar préstamo</button>
+                        <button type="submit" name="btnSolicitarPrestamos" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Solicitar préstamo</button>
                     </div>
+                    </form>
+                    <form action="ServletPagoPrestamos" method="get">
                      <div>
                         <button type="submit" name="btnPagoDePrestamos" value="true" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Pago de préstamos</button>
                     </div>
                      </form>
+                     
                 </div>
             </div>
         </div>

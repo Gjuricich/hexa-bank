@@ -2,17 +2,21 @@
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="entidad.*" %>
 <% 
-
-
-
-ArrayList<Pais> lista_Paises = new ArrayList<Pais>();
-lista_Paises = (ArrayList<Pais>) request.getAttribute("Lista_Paises");
-ArrayList<Localidad> lista_Localidades = new ArrayList<Localidad>();
-lista_Localidades =(ArrayList<Localidad>) request.getAttribute("Lista_Localidades");
-ArrayList<Provincia> lista_Provincias = new ArrayList<Provincia>();
-lista_Provincias = (ArrayList<Provincia>) request.getAttribute("Lista_Provincias");
-
-String respuestaCliente = (String) request.getAttribute("respuestaCliente");
+	ArrayList<Pais> lista_Paises = (ArrayList<Pais>) request.getAttribute("Lista_Paises");
+	ArrayList<Localidad> lista_Localidades =(ArrayList<Localidad>) request.getAttribute("Lista_Localidades");
+	ArrayList<Provincia> lista_Provincias  = (ArrayList<Provincia>) request.getAttribute("Lista_Provincias");
+	
+	   
+	String respuesta = null;
+	if(session != null && session.getAttribute("respuesta") != null){
+	respuesta = (String)session.getAttribute("respuesta");
+	session.removeAttribute("respuesta");
+	%>
+	<script> 
+	  alert('<%= respuesta%>');
+	</script>   
+	<%
+	respuesta = null;}
 %>
 
 <!DOCTYPE html>
@@ -47,15 +51,23 @@ String respuestaCliente = (String) request.getAttribute("respuestaCliente");
         
         const nombreInput = document.getElementById('nombre');
         const nombreValue = nombreInput.value.trim();
+        const usuarioInput = document.getElementById('usuario').value;
         const apellidoInput = document.getElementById('apellido');
         const apellidoValue = apellidoInput.value.trim();
 
         const textoValido = /^[a-zA-Z\s]+$/;
-        
+        const textoValidoUsuario = /^[a-zA-Z0-9]+$/;
         
         if (contrasena !== confirmarContrasena) {
             alert('Las contraseñas no coinciden.');
             return false; 
+        }
+        
+        if (!textoValidoUsuario.test(usuarioInput) || usuarioInput === '') {
+            alert('Usuario incorrecto. El usuario no debe contener espacios.');
+            usuarioInput.focus();
+            event.preventDefault();
+            return false;
         }
         
         if (!textoValido.test(nombreValue) || nombreValue === '') {
@@ -112,17 +124,6 @@ String respuestaCliente = (String) request.getAttribute("respuestaCliente");
     <div class="flex">
         <div class="w-1/12 bgLeft pt-24"></div>
         <div class="w-10/12 p-4 bg-white bg-opacity-80 pt-24">
-        	<%
-		        String message1 = (String) request.getAttribute("respuestaCliente");
-		 		
-		        if (message1 != null) {
-		    %>
-		        <script>
-		            alert('<%= message1 %>');
-		        </script>
-		    <%
-		        }
-		    %>
             <div class="container mx-auto px-4 py-8">
                 <div class="w-2/3 mx-auto">
                     <h2 class="sm:text-3xl text-2xl font-medium title-font mb-2 text-gray-900">Nuevo Cliente</h2>
@@ -185,7 +186,7 @@ String respuestaCliente = (String) request.getAttribute("respuestaCliente");
                             </div>
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha-nacimiento">Fecha de Nacimiento:</label>
-                                <input type="date" max="2006-01-01" id="fecha-nacimiento" name="fechanacimiento" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required max="2005-01-01">
+                                <input type="date" max="2006-01-01" min="1930-01-01" id="fecha-nacimiento" name="fechanacimiento" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required max="2005-01-01">
                             </div>
                             <div class="col-span-1 md:col-span-2 border-b pb-4 mt-4">
                                 <h3 class="text-lg font-medium title-font mb-2 text-gray-700">Datos de Contacto</h3>
@@ -251,11 +252,11 @@ String respuestaCliente = (String) request.getAttribute("respuestaCliente");
                             </div>
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="contrasena">Contraseña:</label>
-                                <input type="password" id="contrasena"  name="contrasena" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                                <input type="password" id="contrasena" maxlength="15"  minlength="8" name="contrasena" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                             </div>      
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="ConfirmarContrasena">Confirmar contraseña:</label>
-                                <input type="password" id="ConfirmarContrasena" name="ConfirmarContrasena" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                                <input type="password" id="ConfirmarContrasena" maxlength="15" minlength="8" name="ConfirmarContrasena" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                             </div>     
                         </div>
                         
@@ -271,8 +272,9 @@ String respuestaCliente = (String) request.getAttribute("respuestaCliente");
                     <%
                     }
                     %>
-                        <div class="flex justify-end w-full mt-4">
-                        <button onclick="history.back()" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Atrás</button>
+                       <br>
+                    <div class="flex justify-end w-full mt-4">
+                        <a href="MenuAdmin.jsp" class="text-white bg-purple-500 border-0 py-2 px-8 focus:outline-none hover:bg-purple-600 rounded text-lg">Volver al menú</a>
                     </div>
                 </div>
             </div>
