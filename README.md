@@ -46,7 +46,7 @@ Para ejecutar este proyecto es necesario tener instalado lo siguiente:
 
 ## Documentación
 
-El diseño y desarrollo de Nonox se encuentra detallado en este [informe](https://drive.google.com/file/d/1rcuyR0Kk74rbur8ye6AZdhAs2pEmCW5f/view?usp=sharing) donde podrá acceder:
+El diseño y desarrollo de HexaBank se encuentra detallado en este [informe](https://drive.google.com/file/d/1rcuyR0Kk74rbur8ye6AZdhAs2pEmCW5f/view?usp=sharing) donde podrá acceder:
 
 1. DER.
 2. Funcionalidad Login.
